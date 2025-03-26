@@ -1,0 +1,33 @@
+Energy is an important factor in maintaining a sustainable human life, and using the correct resources is crucial when addressing energy issues with sensitivity. The use of fossil fuels and their negative impacts, such as global warming, climate change, and pollution of air and water, cannot be ignored if we aim to create a cleaner, more habitable world. To reduce these negative impacts, renewable energy sources are increasingly being used to produce energy for households and many other sectors.
+
+The transportation sector is one of the most reliant on fossil fuels, thus contributing significantly to environmental damage. To reverse this trend and reduce fossil fuel use in transportation, electric vehicle technologies are being developed. Alongside these advancements, energy storage systems have become more prevalent and have reached a critical point (Richardson, 2013). With the rapid growth of energy storage systems, lithium-ion batteries have become the fastest-growing and most developed type of chemical and physical storage solution (Aaldering et al., 2019; Andrea, 2010).
+
+As the use of these systems has increased, scientists and companies have worked to make them more efficient, longer-lasting, and safer. For this purpose, Battery Management Systems (BMS), with their intelligent algorithms and controllers, play a crucial role in enhancing the reliability and efficiency of batteries in storage systems (Febg et al., 2018). The BMS monitors parameters such as voltage, current, temperature, and fault prediction. It collects and processes data to ensure that the system operates as efficiently as possible (Wang et al., 2017, 2020).
+
+The electric vehicle market experienced a significant downturn in the 1930s due to oil discoveries and advancements in internal combustion engine (ICE) technology, which reduced vibration and noise (C.C. Chan, 2002). The development of nickel-metal batteries, with their high energy densities, was followed by the introduction of lithium-ion batteries in 1977 (LIBs), which significantly boosted battery usage in electric vehicles. In 2008, Tesla introduced its first pure electric vehicle, offering a 245-mile range on a single charge (U.J. Thomas, 2019). Today, electric vehicles can achieve ranges of around 500 miles per charge (J. Chen, 2022).
+Lithium-ion batteries vary in chemical composition and structure. Some common types include:
+* Nickel Cobalt Manganese (NCM): A high-performance battery type with a long lifespan, commonly used in electric vehicles.
+* Lithium Iron Phosphate (LiFePO4): A safer, longer-lasting option favored in electric vehicles and energy storage systems.
+* Nickel Cobalt Aluminum Oxide (NCA): Known for high energy density, it is commonly used in electric vehicles.
+* Lithium Manganese Oxide (LMO): Offers high safety, long lifespan, and low cost, though its energy density is not as high as other types.
+* Lithium Titanate Oxide (LTO): Provides fast charging, long lifespan, and high safety but has lower energy density compared to traditional lithium-ion batteries.
+
+These varieties offer different advantages depending on the application. For example, LiFePO4 batteries are preferred for safety and longevity, while NCM and NCA batteries are ideal for applications requiring higher energy density and performance (Dahlin & Storm, 2010).
+
+Lithium-ion batteries are known for their high energy density, making them lightweight, compact, and capable of long-lasting use. They typically last between 500 and 1500 charge cycles, charge quickly without a memory effect, and are relatively more environmentally friendly than other types of batteries. However, they are expensive due to the use of rare materials such as lithium, cobalt, and nickel. They are also sensitive to temperature changes; high heat can reduce their lifespan and pose safety risks (Linden & Reddy, 2002).
+
+Overview of BMS Types
+
+Battery Management Systems (BMS) are designed to ensure the safety, performance, and longevity of batteries by monitoring and controlling their operation. The main types of BMS architectures are:
+* *Centralized BMS*: A single controller manages all battery cells via several wires. This is cost-effective but not suitable for large systems due to complex wiring and a single point of failure.
+* *Modular BMS*: The battery pack is divided into smaller modules, each with its own controller. These controllers communicate with a central unit. This architecture offers scalability, fault tolerance, and effective management, making it ideal for medium to large systems.
+* *Primary Controller-Subcontroller BMS*: The main controller oversees subcontrollers that manage smaller cell groups. This combines the benefits of both centralized and modular systems, allowing for flexible configurations.
+* *Distributed BMS*: Each cell or small group of cells has its independent controller. This reduces wiring complexity and offers high scalability but is costly and requires complex communication protocols.
+
+In our system, a modular BMS is the most suitable choice.
+
+*Reason for the Selection of Modular BMS*
+
+A modular design supports medium-to-large battery packs by allowing easy expansion. This is particularly important in a solar-powered charging station, where battery capacity may need to grow over time. If a module fails, the issue can be isolated to that module, minimizing the impact on the overall system and improving reliability. Localized module controllers make troubleshooting and repairs easier by pinpointing issues to specific modules. Each module processes its own data and communicates it to the central controller, ensuring efficient monitoring and control of the entire system.
+
+The modular BMS is especially well-suited for dynamic load handling, which is a common feature in solar-powered systems where charging rates can fluctuate based on sunlight availability. While centralized and distributed BMS architectures have their advantages, the modular BMS strikes the best balance between scalability, fault tolerance, and ease of maintenance for a solar-powered DC charging station. Thus, it is the optimal choice for our application.
