@@ -1,0 +1,1009 @@
+T.C. 
+BAHÇEŞEHİR UNIVERSITY
+
+
+
+
+FACULTY OF ENGINEERING AND NATURAL SCIENCES
+
+
+CAPSTONE PROJECT FINAL REPORT 
+
+DEVELOPİNG BATTERY MANAGEMENT SYSTEM FOR LABORATORY SCALE SET-UP(1)
+#1010885
+
+2104867 Mohmad Yaseen Alwattar  Energy System Engineering
+1902463 İzem Azra Akyol Energy System Engineering
+2101988 Tuna Ertürk Software Engineering
+2002049 Mete Özeren Software Engineering
+2105125 Doğa Yeşilyurt Energy System Engineering
+
+
+Advisors: 
+Assist. Prof Nezihe Kucuk Yıldıran Department of Energy System Engineering
+Assist. Prof Ece Gelal Soyak Department of Computer Engineering
+
+
+ISTANBUL, December , 2024
+
+
+
+
+
+STUDENT DECLARATION
+
+
+By submitting this report, as partial fulfillment of the requirements of the Capstone course, the students promise on penalty of failure of the course that
+•	they have given credit to and declared (by citation), any work that is not their own (e.g. parts of the report that is copied/pasted from the Internet, design or construction performed by another person, etc.);
+•	they have not received unpermitted aid for the project design, construction, report or presentation;
+•	they have not falsely assigned credit for work to another student in the group, and not take credit for work done by another student in the group. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ABSTRACT
+DEVELOPİNG BATTERY MANAGEMENT SYSTEM FOR LABORATORY SCALE SET-UP(1)
+
+#1010885
+
+
+2104867 Mohmad Yaseen Alwattar  Energy System Engineering
+1902463 İzem Azra Akyol Energy System Engineering
+2101988 Tuna Ertürk Software Engineering
+2002049 Mete Özeren Software Engineering
+2105125 Doğa Yeşilyurt Energy System Engineering
+
+Faculty of Engineering and Natural Sciences
+
+Advisor: 
+
+Assist. Prof Nezihe Kucuk Yıldıran Department of Energy System Eng.
+                 Assist. Prof Ece Gelal Soyak Department of Computer Eng.
+
+
+December, 2024
+
+
+A BMS will be integrated into solar-powered DC charging stations to ensure efficiency, safety, and sustainability in energy delivery to EVs. The system will solve the intermittence of the solar power by storing excess energy during peak generation and delivering it during low sunlight conditions, hence providing reliable and consistent power to EVs. It finds very good application in the modular BMS for such a application, which features great scalability, fault tolerance, and an advanced performance monitoring device for battery parameters such as State of Charge and State of Health. Active balancing methods in the BMS provide equal voltage between all battery cells to increase lifetime and efficiency. The modular BMS has shown better adaptability to dynamic solar inputs and stressful operational conditions, despite the cost, environmental impacts, and technical complexities of their implementation. Safe operation, optimization of energy use, and regulatory standards for the wider diffusion of renewable energy technologies are ensured through the BMS in EV charging infrastructure toward a sustainable and low-carbon future. The requirements, constraints, and conceptual solutions presented in this paper provide important information on the implementation of the BMS in solar-powered DC charging stations. The development of such systems will definitely prove highly instrumental in developing clean energy systems.
+
+
+
+
+
+
+Key Words: 
+
+Battery Management System: The main control unit is supposed to observe, protect, and optimize the performance of the battery pack by ensuring safety and efficiency.
+
+Modular Design: An open architecture that lets battery modules be added to, replaced, or even upgraded without affecting the integral system.
+
+Lithium-Ion Batteries: High-energy storage devices characterized by their reliability, long life, and suitability for renewable energy systems; thermal stability and energy efficiency being some of the key criteria that influenced the choice.
+
+
+Temperature Control System: A system that serves to maintain the temperature of the battery within a specified operating range.
+
+Energy Balancing System: A method of balancing the energy storage of individual cells in a battery pack for operational optimization to extend its life.
+
+Fault tolerance: the capability of the system to continue operating under some component failures, therefore, minimizing disruptions.
+
+Voltage Level Monitoring: The electrical potential across the battery cells and modules is observed with the view to ensure safety and efficiency in its operation.
+
+Electrical Current Tracking: Inflow and outflow of electricity in and from the pack are tracked to prevent damage due to excess currents.
+
+Continuous Performance Observation: Continuous on-site observation of performance according to parameters such as temperature, voltage, and quantity of energy stored to track system anomalies.
+
+Interactive Display System: The user-friendly interface to visually present system performance data and, where possible, interact with the system.
+
+
+Open Voltage Measurement: The measurement of voltage in a battery at its no-load condition, which gives its maximum energy potential.
+
+Energy Leakage Prevention: Techniques for reducing the natural energy leakage when batteries are not used.
+
+Uneven Voltage Correction: The process of balancing the cells in a battery pack in order to make all cells work at almost similar voltages.
+
+
+Interference Mitigation: Techniques that reduce interference in electrical signals, which can disrupt system performance.
+
+Abreviations: 
+
+
+PV: Photovoltaic
+BMS: Battery Management System
+SOC: State of Charge
+SOH: State of Health
+DC: Direct Current
+AC: Alternating Current
+MPPT: Maximum Power Point Tracking
+LFP: Lithium Iron Phosphate
+EV: Electric Vehicle
+GUI: Graphical User Interface
+CAN: Controller Area Network
+I2C: Inter-Integrated Circuit
+UART: Universal Asynchronous Receiver-Transmitter
+PCB: Printed Circuit Board
+EMS: Energy Management System
+ESS: Energy Storage System
+NMC: Nickel Manganese Cobalt
+LTO: Lithium Titanate Oxide
+HVAC: Heating, Ventilation, and Air Conditioning
+HMI: Human-Machine Interface
+PWM: Pulse Width Modulation
+RTD: Resistance Temperature Detector
+EOL: End of Life
+EIS: Electrochemical Impedance Spectroscopy
+DOD: Depth of Discharge
+UPS: Uninterruptible Power Supply
+VFD: Variable Frequency Drive
+SOCM: State of Charge Management
+SRM: Solar Resource Management
+FMEA: Failure Mode and Effects Analysis
+
+TABLE OF CONTENTS 
+ABSTRACT	iii
+TABLE OF CONTENTS	iv
+LIST OF TABLES	v
+LIST OF FIGURES	v
+LIST OF ABBREVIATIONS	vi
+1. OVERVIEW	1
+1.1. Identification of the need	1
+1.2. Definition of the problem	1
+1.3. Conceptual solutions	1
+1.4. Physical architecture	3
+2. WORK PLAN	4
+2.1. Work Breakdown Structure (WBS)	4
+2.2. Responsibility Matrix (RM)	4
+2.3. Project Network (PN)	5
+2.4. Gantt chart	5
+2.5. Costs	7
+2.6. Risk assessment	8
+3. SUB-SYSTEMS	9
+3.1. The name of the sub-system 1	9
+3.2. The name of the sub-system 2	10
+4. INTEGRATION AND EVALUATION	11
+4.1. Integration	11
+4.2. Evaluation	11
+5. SUMMARY AND CONCLUSION	12
+ACKNOWLEDGEMENTS	13
+REFERENCES	14
+APPENDIX A	15
+APPENDIX B	16
+ 
+LIST OF TABLES
+Table 1: Active Balancing in Modular BMS……………………………………...............4
+Table 2 : Methods For measuring SoC and SoH………………………………………………6
+Table 3: Performance Indicator………………………………………………………………....7
+Table 4: Market Comparison…………………………………………………………………..16
+Table 5: Comparison of the three conceptual solutions………………………………………18
+Table 6 : Responsibility Matrix for the team…………………………………………………20
+Tabel 7: Gantt Chart………………………………………………………………………….22
+Table 8: Costs………………………………………………………………………………..23
+Table 9: Risk matrix……………………………………………………………………….....23
+Table 10: Risk assessment…………………………………………………………….25
+Table 11: Standards and constraints……………………………………………………….....29
+Table 12 :……………………………………………………………………………………...31
+Table 13:………………………………………………………………………………………37
+Table 14:………………………………………………………………………………………37
+
+LIST OF FIGURES
+Figure 1: Active Balance……………………………………………………………………5
+Figure 2: Process chart for the system………………………………………………..19
+Figure 3: The project network…………………………………………………………21
+Figure 4: SOC formula………………………………………………………………..27
+Figure 5:SOH formula…………………………………………………………...........27
+Figure 6:………………………………………………………………………………27
+Figure 7: Circuit………………………………………………………………………28
+Figure 8:………………………………………………………………………………35
+Figure 9:……………………………………………………………………………….38
+Figure 10: Integration Chart…………………………………………………………………..43
+
+ 
+
+LIST OF ABBREVIATIONS
+IoT	Internet of Things
+M2M	Machine-to-Machine
+IEEE	The Institute of Electrical and Electronics Engineers
+
+ 
+1. OVERVIEW
+Introdcuction 
+
+	Increasing adoption of EVs required further development of energy storage and management systems. Development of charging infrastructure that will be powered by renewable sources became a priority. Solar-powered DC charging stations have been coming out as a sustainable solution to support the transition toward a clean energy-based economy from fossil fuel dependence. But again, solar energy is variable due to weather and day time and hence, maintaining steady and reliable energy supply has been a challenge. These challenges are addressed through the integration of a BMS, which is designed to regulate energy flow, monitor battery health, and optimize the performance of energy storage systems.
+	The focus of this study is on the design and implementation of a modular BMS for solar-powered DC charging stations. A modular BMS has been chosen for its scalability, fault tolerance, and also to handle dynamic energy input from solar panelsThe BMS allows the storage of surplus energy and smoothing of power delivery during instances of high demand; it ensures reliability and operational efficiency in the station.Due to this, active balancing techniques have been incorporated to keep voltages uniform across battery cells, prolong the service life of the batteries, and enhance energy utilization.
+	Other functional and performance requirements, such as voltage and temperature monitoring of the BMS, would be analyzed together with the estimation of the SoC and SoH, in addition to fault detection. Contraindications among the economical, environmental, social, and technical features of the system will be brought under scrutiny. Particular attention and emphasis will be given to the cost challenges posed by component costs, the environmental impact of lithium-ion batteries, and the demand for sophisticated algorithms that can work effectively with fluctuations in solar energy. Discussion of international standards on safety and operational capacity will present the system from a regulatory Point of view.
+
+	A review of the existing literature and technological advances in the field of BMS will be carried out to identify the most suitable architecture for the application. The study will research modular BMS systems to understand how well they integrate with solar systems and perform under various energy demands. It will also compare various BMS models, highlighting those features that make modular systems singularly advantageous for medium-to-large-scale applications. Safety, durability, and compatibility with renewable energy infrastructure will be emphasized.
+	This research paper will detail the integration of a modular BMS in solar-powered DC charging stations. The resultant understanding will shed light on how such systems overcome the challenges associated with renewable energy variability for reliable and sustained charging of EVs. Addressing both the technical and operational aspects of BMS, this study tries to add to the literature on efficient and resilient renewable energy systems, which support the world toward a low-carbon transition.
+
+1.1. Identification of the need 
+	Efficiency and safety are the essence of the requirement for a Battery Management System (BMS) in the Direct Current (DC) charging station powered by solar panels. Solar panels ensure clean, renewable energy, but it is a variable source of energy because of variations in weather conditions and times of day. It becomes quite tricky to directly supply a steady power flow to an electric vehicle using such an unpredictable source. This is where a Battery Management System (BMS) can bridge that gap and store energy. When solar generation is high, the Battery Management System (BMS) helps to store excess energy and regulate energy delivery during peak demand periods, always providing electric vehicles with reliable and efficient charging, regardless of variation in solar supply.
+	A Battery Management System (BMS) is also crucial for the health of the battery system that would be set up with this charging station. In these two states, batteries undergo various forms of chemical and physical stresses; if poorly managed, such batteries could degrade faster or even develop safety risks. The Battery Management System (BMS) observes all the parameters of the batteries, like temperature, state of charge, and state of health, to avoid overheating or overcharge issues, which provide safety and performance throughout their life.
+	This will help further make the Direct Current (DC) charging station sustainable, too, because of its integrated Battery Management System (BMS) within it.In that regard, as electric vehicles increase in demand, the need for reliable renewable charging stations will further minimize carbon emissions and meet our energy demands safely. Solar-powered charging station integrated with a BMS improves renewable energy utilization by effectively storing the generated power from solar panels. This would mean improved energy availability for electric vehicles and a low-carbon energy system.
+
+
+1.2. Definition of the problem
+	A BMS is one of the most important components for a solar-powered DC charging station, since it is in charge of both the incoming solar power and the overall condition of the battery. Solar energy production varies from weather and time of day, which means there can be either too much or not enough energy for EV charging at different times. The Battery Management System (BMS) stores extra energy when there's a lot of solar power and ensures there's enough energy to charge vehicles when solar power is low.
+	A BMS is one of the most important components for a solar-powered DC charging station, since it is in charge of both the incoming solar power and the overall condition of the battery. Solar energy production varies from weather and time of day, which means there can be either too much or not enough energy for EV charging at different times. The Battery Management System (BMS) stores extra energy when there’s a lot of solar power and ensures there’s enough energy to charge vehicles when solar power is low.
+	The primary works of BMS include monitoring the State of Charge and State of Health, where the SOC tells how much charge remains in a battery and SOH is tracking the long run health status showing how effectively it maintains charge over the time period. Precise measurement of SoC, and SoH, cannot be performed effortlessly, as it may include several causes of inaccuracies to prevent further overcharging or undercharging. If this is not done properly, it will have a negative impact on the battery's lifespan and performance. Safety is another important reason for using a BMS.
+	DC fast charging puts heavy loads on batteries, as their capacity can be drained to a state of almost full discharge in a very short period of time, causing them to heat up. The BMS is tuned to 
+
+continuously observe temperature and current levels to avoid overheating or any other imminent safety risks such as thermal runaway. Thus, a BMS balances the flow of incoming solar power with energy storage and charging demands to maintain the operational safety and efficiency of the whole station for reliable power delivery to electric vehicles.   
+
+
+
+	Functional Requirement	Description
+1	Battery Monitoring	Measure cell, module, and pack voltages; monitor current and temperature to ensure system safety.
+2	State Estimation	Calculate State of Charge (SoC), State of Health (SoH), for battery management.
+3	Safety Management	Detect and respond to over-voltage, under-voltage, over-current, and temperature anomalies to prevent faults.
+4	Communication and Data Management	Enable communication between modules and the master controller; log and transmit real-time data for analysis.
+5	Balancing and Control	Equalize cell voltages, manage charge/discharge cycles, and adapt to dynamic load and solar conditions.
+6	Scalability and Modularity	Support expansion by adding modules seamlessly while ensuring independent module operation.
+7	Fault Tolerance and Isolation	Isolate faulty modules automatically; ensure uninterrupted operation of the remaining system.
+8	Efficiency and Low Power Consumption	Minimize power loss in the BMS while ensuring efficient operation under varying solar input conditions.
+9	Integration with Solar and DC Systems	Coordinate with solar power input and DC charging station requirements; protect against voltage surges.
+10	Compliance and Standards	Meet safety and operational standards; use standard communication protocols
+    1.2.1. Functional requirements
+  
+
+  A modular BMS aims at safe and efficient operation of the battery packs in applications like solar-powered DC charging stations. The system will continuously monitor vital parameters such as cell voltages, module temperatures, and current flow to maintain battery health and prevent faults related to overcharging or overheating. It applies advanced techniques in estimating the SoC, SoH, and SoP possible, hence accurate control and predictive maintenance. The modular design also allows for cell balancing with a uniform voltage across all cells for optimum performance and long life. Besides its safety and performance features, the modular BMS is very scalable and easy to expand by adding more modules.
+	Faults will be confined to the level of a module, and the system will keep on working while repairs are carried out. Module controllers communicate through a central unit so that information is fully shared and operation is unified. This architecture also supports integration with solar systems, where features include dynamic adjustment of charging operations according to changing solar input. The system interfaces via any standard communication protocols, such as CAN bus or I2C, guaranteeing compatibility and reliability for a wide range of uses.
+
+For cell balancing
+
+             Active Balancing in Modular BMS for Solar DC Charging Station In a solar-powered DC charging station, the battery pack consists of cells organized into modules and relies on efficient cell management. Active balancing handles the natural variation in the characteristics of cells due to manufacturing, aging, or other external conditions. By giving back extra energy from the higher-
+
+Table 1: Active Balancing in Modular BMS
+
+
+voltage cells to the lower-voltage ones, the system maintains the same voltage or state of charge across the pack. The method involves constant voltage monitoring, which has been developed into inductive balancing for high efficiency and scalability. Energy transfer occurs across cells or modules using DC-DC converter circuits that maintain reliability to avoid such problems as overcharging during periods of peak energy from the sun.
+	The modular design of the BMS provides enhanced active balancing, with the ability for each module to function independently while communicating to a main controller. Feedback loops prevent overcompensation adjustment, maintaining balance during charging and discharging. Unlike passive systems, which work by dissipating excess energy as heat, active balancing conserves energy by circulating it within the pack, reducing stress on individual cells. This approach is crucial for handling the variability of solar input, ensuring uniformity across the battery pack, extending its lifespan, and supporting efficient EV charging operations.
+
+
+
+
+
+Figure 1: Active Balance
+Source:https://www.mokoenergy.com/active-balancing-bms/
+
+Chowdhury, S., Shaheed, M. N. B., & Sozer, Y. (2021). State-of-charge balancing control for modular battery system with output DC bus regulation. IEEE Transactions on Transportation Electrification, 7(4), 2181-2193.
+
+Method	Description	Use Case	Advantages for SoC	Limitations for SoC	Advantages for SoH	Limitations for SoH
+Coulomb Counting	Integration of charge and discharge currents to calculate SoC and SoH.	Battery charging stations, electric vehicles.	- Real-time SoC tracking. 
+- Simple and low-cost hardware requirements.	- Error accumulation:accuracy may degrade over time. 
+- Requires accurate initial SoC measurement.	-Simple SoH calculation. 
+- Low-cost and quick implementation.	Battery use and environmental factors affect accuracy.
+Open Circuit Voltage (OCV)	SoC and SoH estimation by measuring the open-circuit voltage of the battery.	Low current battery testing and monitoring.	- Accurate SoC estimation under idle conditions. 
+- Low-cost.	- Not suitable for real-time measurements. 
+- Requires the battery to be at rest for accurate results.	-Voltage drop reflects capacity loss. 
+- Simple to apply.	-Provides limited information on overall battery health. 
+- Requires a rested battery.
+Sleek Dual Kalman Filter	State estimation for SoC and SoH by considering noise and uncertainty.	High-accuracy applications (electric vehicles, energy storage).	- High accuracy.
+
+Compensates for noise and uncertainty in measurements.	- High computational complexity. 
+- Sensitive to model parameters.	- High-accuracy SoH estimation. 
+- Takes system dynamics into account.	- Model parameters need to be accurately defined. 
+- High computational requirements
+Internal Resistane	Estimates SoH by measuring the increase in internal resistance over time.	Battery health monitoring and maintenance.	- Real-time monitoring is possible. 
+- Easy to integrate into existing systems.	- Requires precise resistance measurements. 
+- Noise in measurements may affect	- Increase in internal resistance indicates battery aging. 
+-Simple to implement.	- Requires high-precision measurements. 
+- Measurement noise and environmental factors may affect accuracy.
+Capacity Monitoring	Monitors capacity degradation over time to estimate SoH.	Long-term battery health monitoring.	- Simple and direct indication of capacity loss.	- Requires long-term monitoring. 
+- Not suitable for real-time SoC estimation.	- Directly shows capacity degradation. 
+- Simple to apply.	-Long-term tracking is necessary. 
+- Low usage may not show significant capacity loss.
+Methods For measuring SoC and SoH :
+
+  
+Table 2 : Methods For measuring SoC and SoH
+
+Source of table: Pesaran, A. A., Keyser, M., et al. (2012). State of Charge Estimation for 
+Lithium-Ion Batteries Using Coulomb Counting. Journal of Power Sources.
+
+1.2.2. Performance requirements
+ 
+                                     Table 3: Performance Indicator 
+
+Several key performance indicators are used to monitor the performance of a BMS in solar-powered DC charging stations. These include voltage, current, and temperature monitoring that ensure the operating of batteries within the limit of safety. Voltage monitoring prevents damage by not letting each cell overcharge or undercharge, while current monitoring prevents overheating. Temperature control keeps the battery from getting too hot or cold during charging and discharging.
+In addition, the BMS monitors the SoC and SoH of the battery. SoC gives the amount of charge left in the battery, while SoH reflects the general health of the battery concerning holding charge over time. These are important in optimizing charging and discharging and ensuring the battery lasts as long as possible.
+Other key performance indicators are fault detection and cycle life tracking. The BMS will check any malfunctions of individual cells or modules and then inform the system so it can take remedial measures. Tracking cycle life offers insight into when to expect replacement of the battery in order to ensure reliable operation of the charging station throughout its lifetime. The monitoring of all these parameters is an assurance that the system operates effectively, safely, and is long-lasting.
+
+Source of table : Harris, A., Cox, R., & Nasipuri, A. Technical Report: Battery Modeling and Performance Metrics.
+Omar, N., Hegazy, O., Mulder, G., Bossche, P. V., Mierlo, J. V., & Timmermans, J.-M. (2022). A review on battery management systems and its application in electric vehicles. IEEE Xplore. https://doi.org/10.1109/9708114
+    1.2.3. Constraints
+1. Economic Limitations
+The investment cost is a big concern with the installation of a modular BMS on a solar-powered DC charging station. Its components such as sensors, microcontrollers, and active balancing circuitries are really expensive to implement. Most of them use lithium-ion batteries with greater energy density and are consequently much more costly upfront. Ongoing operations expenses maintenance, recalibration, and eventual replacement also have financial tolls. Therefore, the performance optimization should not overlook the affordability of the system to make it viable for wide applicability cost-effectively.
+
+2. Environmental Constraints
+Although the solar-powered systems are ecologically friendly, the manufacture and disposal of lithium-ion batteries pose an environmental threat. The mining process for raw materials such as lithium, cobalt, and nickel destroys ecosystems and contributes to pollution. If not disposed of properly, toxic chemicals in batteries can be released into the environment. For minimal environmental impact by the system, energy efficiency should be ensured in the BMS design; extending the life of the battery minimizes waste and ensures sustainability.
+
+3. Social Constraints
+Solar-powered DC charging station adoption also faces challenges in the form of public acceptance and trust. Concerns ranging from overheating to fire risks regarding battery safety need assurance through appropriate safety mechanisms that are reliable. The system must also be in conformity with local regulations and in harmony with the existing infrastructure. Educating the public on the benefits and reliability of renewable energy systems is key towards gaining broader acceptance and support.
+
+4. Technical Constraints
+The type of battery determines the safety, cost, and efficiency of the whole system. As an instance, lithium-ion batteries, due to their high energy density, see wide use in renewable systems. Nevertheless, they also have hotspots of overheating or degradation if operated under unfavorable conditions. A BMS must, therefore, make sure that safe operation for a long duration is considered with strict monitoring and control:.
+Solar is a variable energy source that fluctuates with the weather and time of day. The BMS should have sophisticated algorithms to cope with these fluctuations effectively for non-wastage of energy and non-overloading of batteries. Proper solar integration will make the system store energy when sunlight at peak hours provides maximum output and release continuously during periods of low solar output.
+With the growth of the system, scalability is a major demand. The BMS must be in a position to handle additional batteries without losing efficiency. Modular designs, together with good communication between modules, ensure that the system is able to grow without a loss in performance. Similarly important is the accurate state estimation, including precise SoC and SoH measurement. This calls for advanced sensors and algorithms to track the performance of the battery and predict possible failures.
+Among these, thermal management is particularly critical because batteries have the tendency to overheat under high rates of charge/discharge. The BMS should be monitoring the temperatures constantly and should trigger control systems for cooling in cases of need to avoid any damage. Besides, fault detection in real time-including imbalances in cell strings, short circuits, and abnormal voltage spikes-is also very important to keep the system safe and prevent further deterioration of the battery packs.
+Good communication between the BMS and the solar panels, extended to the electric vehicle, will ensure proper coordination in functionality. Delays or any breaks in transmitting information lead to inefficiencies in operations or even unsafe working conditions. A good network in communication ensures all items operate in harmony to preserve system efficiency and safety across all conditions.
+5. Operational Constraints
+Energy loss is inherent in a battery system, especially when the process of charge redistribution is considered. Even when active balancing is applied, some energy will be dissipated to the environment in one form or another. The system should be so designed that such losses become minimum to ensure that maximum energy from the solar panel is utilized and wastage is reduced to a minimum.
+
+Maintenance procedures, like the replacement of batteries or sensor recalibration, are generally time-consuming and may interrupt system operations. While regular maintenance is important to maintain performance, it has to be carefully scheduled to minimize any downtime. In addition, the operating environment is also a critical factor. The system must be sufficiently robust to operate reliably in extreme heat, freezing cold, or high humidity, which can lead to component degradation and decreased overall performance.
+Another critical aspect of operational efficiency is managing the battery life cycle. As batteries age, their performance degrades over time. The BMS must monitor indicators of aging, such as capacity fade and increased internal resistance, and seamlessly integrate replacement batteries without disrupting the system. During periods of high demand, the BMS must also handle dynamic  load management effectively, distributing the load evenly across cells and modules to prevent overloading of any specific components.
+DC fast charging brings huge stress on the batteries, which increases the possibility of overheating or voltage imbalances. The BMS should actively monitor such conditions and make real-time adjustments to maintain safety. During idle periods, the BMS must conserve power while remaining ready for the next session, ensuring energy efficiency even when the station is not in use. And lastly, integration or replacement of battery modules should be easy. The BMS should automatically balance the new and existing modules for complete reliability and performance of a system without human intervention.
+6. Regulatory Constraints
+The system should be in conformance with international and local standards, such as ISO 26262 for functional safety or IEC 61508 for industrial safety. These various certifications assure reliability but take a lot of time and resources. If connected to the grid, the station has to follow rules about energy exchange. Different government policies, subsidies, or incentives for renewable energy projects can also influence the financial viability of the system.
+7. Logistical Constraints
+Supply chain issues can be pretty tough, especially when high-quality components such as sensors, microcontrollers, or balancing circuits are in demand. In cases of global shortages or logistical disruptions, the procurement of such parts may delay the timeline of the project. A steady and reliable supply chain is crucial to maintaining the project on schedule and avoiding unnecessary delays.
+The additional requirement is the installation. Installing a solar-powered DC charging station normally requires an upgrade in the local electrical infrastructure to match and guarantee the safety of the installation. The upgrade may be required on power lines, transformers, or protective equipment, further increasing the cost and prolonging the installation period.
+
+Battery recycling is a crucial environmental and logistical concern. The proper reprocessing of spent batteries requires adherence to stringent environmental laws and access to specialized recycling facilities. This helps ensure that toxic materials are handled in an environmentally safe and sustainable manner. However, these facilities may not always be available, and the cost of recycling can be relatively high, which has to be managed with care regarding the overall lifecycle planning of the system.
+8. User Constraints
+The users demand speedy charging, which actually stresses the battery. In contrast, the BMS must strike a balance between quick recharging and preventing the degradation of the battery. Simplicity and intuitiveness in the interface design would allow users and operators to intuitively understand and interact with the system. A poorly understood interface could lead to abuse or inefficiency.
+
+9. Cybersecurity Constraints
+The system needs communication between the BMS, solar panels, and EVs and hence is vulnerable to any cyberattacks. The above data and communications need critical protection. In case connectivity is very important, through the internet or local network, disruption of connectivity may affect the real-time monitoring and controlling aspects.
+
+10. Time and Project Constraints
+Development of a BMS includes rigorous testing in terms of fluctuating solar input or very high demand conditions, which of course stretches the project timeline. Integrating many components from different disciplines and ensuring all work in an efficient way adds complexity and time to the project.
+Source:
+Rama, V., Muniraj, R., Kohila, J., & Jarin, T. (2024). Solar-based smart EV charging station withsmart battery management system. 2024 International Conference on Circuit Power and Computing Technologies
+
+
+1.3. Conceptual solutions
+
+1.3.1. Literature Review
+Using the correct resources holds a significant value when examining energy issues with sensitivity. It is known that the use of fossil fuels and their negative impacts such as global warming, climate change, pollution of air and water etc. These negative impacts can’t be ignored when pursuing a world that is cleaner and more habitable. To reduce the negative impacts of fossil fuels, renewable energy sources are used to produce energy for households and many other sectors.
+
+Transportation sector is one of the sectors that are mostly reliable to fossil fuels, therefore impacting the environment more. To reverse this and lessen the use of fossil fuels in transportation sector, electric vehicle technologies are being developed. Alongside these developments, energy storage systems became used more and reached a crucial point (Richardson, 2013). With the rapid increase of said storage systems, lithium-ion batteries became the fastest-growing and developing one out of all types of chemical and physical storage solutions (Aaldering et al.,2019; Andrea, 2010).
+As the usage of these systems increased, scientists and companies worked to ensure these systems were more efficient, have more longevity and more secure. For this topic, BMS, with its intelligent algorithms and controllers, contribute to the reliability and efficiency of batteries in the storage systems (Febg et al., 2018). The BMS monitors the parameters like voltage, current, temperature, fault prediction etc. They collect, process and ensure that the system operates in the most efficient format (Wang et al., 2017, 2020)
+The EV market share almost shat down at 1930 due to oil discoveries and ICE(Internal Combustion Engine) breakthroughs in vibration and noise.(C.C Chan 2002) Nickel metal batteries developed with high energy densities followed by lithium-ion batteries at 1899 after that  in 1977 (LIBs) which is triggered battery usage in EV. In 2008, the first recent pure EV was  announced to market by Tesla with 245- mile range based on one charge.(U.J. Thomas 2019). Nowadays EVs have big amount of about 500-mile per charge.(J.Chen 2022)
+
+Lithium-ion batteries form the basis for modern energy storage, from smartphones to electric vehicle applications. Though they vary in subtype depending on the cathode materials, the general operation rests on lithium ions that store and release energy, hence making each different in performance, cost, and even safety. According to Chae 2022 and Tarascon & Armand 2021, the most prevalent chemistries of lithium-ion batteries are:
+
+Nickel Cobalt Manganese
+These batteries are referred to with their nickel, cobalt, and manganese proportions-eg., NCM 111, NCM 523, NCM 622, or NCM 811-show a balanced trade-off between energy density and cost. They comprise a big category of chemistries for electric vehicles worldwide since they offer relatively high capacity with decent thermal stability (Chae, 2022).
+
+LFP
+LFP batteries have gained traction in electric vehicles, particularly those positioned around cost-effectiveness and reliability. While their energy density tends to be somewhat lower than NCM or NCA, the gap has been narrowing thanks to steady improvements in cell design and manufacturing (BloombergNEF, 2023).
+
+Nickel Cobalt Aluminum Oxide (NCA)
+NCA batteries come with one of the highest energy densities currently available. With a higher nickel content, they become very attractive to premium electric vehicles. Their elevated energy density may, however, raise safety and stability concerns; therefore, thermal management is very important, as explained by Tarascon & Armand, 2021.
+
+Lithium Manganese Oxide (LMO)
+This chemistry is known for its stability, safety, and lower cost. However, it has a relatively lower energy density compared to the newer chemistries like NCM or NCA, which restricts its application in long-range or high-capacity applications. Chae 2022.
+
+Lithium Titanate Oxide (LTO)
+Batteries with an LTO anode exhibit ultra-fast charging capabilities, a high level of safety, and a long operational lifespan. Despite these advantages, their energy density is lower, making them more suitable for niche uses like backup energy systems and high-power, short-range vehicles (Tarascon & Armand, 2021).
+
+In general, lithium-ion batteries across all subtypes benefit from high energy density, relatively long operational life (often well beyond 1,000 cycles under optimal conditions), and rapid charging capabilities (Goodenough, 2020). They have no “memory effect,” a problem typical of older rechargeable batteries. Modern manufacturing techniques and recycling initiatives have also cleaned up their environmental footprint compared with earlier battery types, although there are concerns about the sourcing and cost of key materials such as lithium, nickel, and cobalt (BloombergNEF, 2023).
+
+Despite these advancements, temperature sensitivity remains a challenge, and excessive heat can compromise both performance and safety. Research into solid-state electrolytes and advanced thermal management systems aims to address these limitations and further enhance lithium-ion battery longevity, safety, and efficiency (Tarascon & Armand, 2021).
+
+Sources : BloombergNEF. (2023). Electric vehicle outlook 2023. Bloomberg Finance L.P.
+Chae, S. (2022). Advances in lithium-ion battery technology. Energy & Environmental Materials, 6(3), 501–511.
+Goodenough, J. B. (2020). Rethinking the Li-battery. Energy & Environmental Science, 7(1), 14–18.
+Tarascon, J.-M., & Armand, M. (2021). Issues and challenges facing rechargeable lithium batteries. Nature, 414(6861), 359–367
+
+Overview of BMS Types
+Battery Management Systems (BMS) are intended to guarantee safety, performance, and lifetime for batteries by monitoring and controlling their operation. Below are the main types of BMS architectures:
+Centralized BMS:
+The single controller controls all the battery cells directly through several wires. Centralized BMS is easy and cheap; however, it is unsuitable for large systems because complex wiring and a single point of failure are concentrated in the wiring harness.
+
+Modular BMS: 
+The battery pack is split into smaller modules; each module would have its controller. These module controllers all converse with a central unit. It features scalability, fault tolerance, and effective management. Therefore, it is especially suitable for medium to large systems.
+
+Primary Controller-Subcontroller BMS:
+The main controller, in hierarchical order, oversees the subcontrollers controlling smaller cell groups. This combines the strengths of centralized and modular systems. This permits a wide latitude of flexibility for complex configurations.
+Distributed BMS:
+	Each cell or small group of cells has its independent controller. It reduces wiring complexity and has a high scalability ceiling but is costly and involves complex communication protocols.
+In the case of our system, the modular BMS will be the most appropriate.
+
+Reason for the Selection of Modular BMS
+A modular design supports medium-to-large battery packs by allowing easy addition of new modules. This is crucial for a solar-powered charging station, where battery capacity might need expansion.If a module fails, the issue can be isolated to that module without affecting the entire system. This improves reliability and reduces downtime.With localized module controllers, troubleshooting and repairs are easier since problems can be pinpointed to specific modules.Each module will process its own data and send it back to the central controller. This way, all parts of the battery system are monitored and controlled with high efficiency.Modular BMS lends itself very well to dynamic load handling, a common feature in solar-powered systems where charging rates are subject to changes in sunlight.
+Centralized and distributed topologies have their benefits, but for a solar-powered DC charging station, this modular BMS strikes a balance for scalability, fault tolerance, and ease of maintenance. Such modular battery management architecture ensures reliable and efficient management, thus proving to be the optimal choice for your application.
+
+    1.3.2. Concepts
+ 
+Victron Energy's VE.Bus BMS V2, Small BMS, and Lynx Smart BMS models offer different features for various needs. In terms of temperature, the VE.Bus BMS V2 typically monitors battery temperatures more precisely and takes automatic actions in case of overheating, while both the Small BMS and Lynx Smart BMS only provide an alarm feature, notifying the user when the temperature limit is reached but without any automatic intervention. Temperature-wise, all of these systems generally operate within the 60-70°C range, but higher temperatures could pose a risk to system protection. 
+	Regarding pricing, the Small BMS is the most affordable model, ranging between 2,631 TRY, while the Lynx Smart BMS is priced around 48,836 TRY. The VE.Bus BMS V2 falls in the 7,204 TRY range. For voltage input, the VE.Bus BMS V2 is typically compatible with 48V systems, while the Small BMS and Lynx Smart BMS are flexible and compatible with 12V, 24V, and 48V systems. 
+In terms of current capacity, the VE.Bus BMS V2 can handle higher currents and is generally used for larger systems. The Lynx Smart BMS provides adequate current capacity for medium-sized systems, while the Small BMS is ideal for systems with lower current requirements. 
+In conclusion, the VE.Bus BMS V2 is the most powerful option for large and industrial applications, while the Lynx Smart BMS offers a good balance for medium-sized systems. The Small BMS provides the most economical solution for smaller systems, and based on the system's requirements, this BMS model is considered the most suitable.
+
+
+
+	VE.Bus BMS V2	smallBMS
+BMS400100000	Lynx Smart BMS     500
+Cost	7.204,39 TL	2.631 Tl	     48.836,43 TL
+Complexity	Medium	Easy	Hard
+Input Voltage	9 – 70 VDC	    8 – 70 VDC	       9 - 60 VDC
+Max  current 	      10 mA	2,2 mA	1000 A
+Temprature	-20 - +50 °C 
+(0 - 120 °F)	20 - +50 °C 
+(0 - 120 °F)	40 °C - +60 °C
+Size 	23,8  x 94,5 x 105,5 mm	106 x 42 x 23 mm	230 x 180 x 100 mm
+Weight	120 g	0,1 kg 	2,7 kg
+
+Table 4: Market Comparison
+
+
+
+
+Aspect	Reference 1	Reference 2	Reference 3
+Study Title	Badoni, M., Pattnaik, M., Varshney, L., & Gupta, A. (2023, November). Development of Solar-powered EV Charging Station With Energy Management System. 
+	Umair, M., Hidayat, N. M., Ahmad, S. A., Ali, N. H. N., Mawardi, M. I. M., & Abdullah, E. (2024). A renewable approach to electric vehicle charging through solar energy storage.	Fatnani, M., Naware, D., & Mitra, A. (2020, September). Design of solar PV based EV charging station with optimized battery energy storage system.
+Focus	This study emphasizes the integration of an energy management system (EMS) with solar-powered EV charging, focusing on modularity and real-time energy flow monitoring.	The research highlights the optimization of energy storage systems (ESS) and their integration with PV and EV batteries to maintain a stable and reliable charging infrastructure.	The paper explores the design and performance of optimized battery energy storage systems (BESS) for sustainable and cost-effective EV charging infrastructure.
+Methods Used	- Sliding mode control to ensure dynamic energy balance.
+- Modular design for scalability and real-time monitoring.
+- Integration of PV panels with an EMS for efficient energy dispatch.	- MATLAB simulations to analyze ESS behavior under dynamic conditions.
+- Predictive algorithms to forecast solar energy and match EV charging demand.
+- Comprehensive modeling of PV-ESS-EV systems.	- Advanced modeling and simulation tools to design optimized BESS.
+- Analysis of cost-benefit for renewable integration.
+- Performance testing through energy flow simulation.
+Energy Management Approach	Dynamic balancing of PV energy generation with EV load demand, facilitated by sliding mode control systems.	A predictive approach to manage ESS operations, ensuring alignment between solar energy generation and EV charging needs.	Energy dispatch is optimized through advanced BESS design, focusing on cost efficiency and sustainable energy utilization.
+PV Integration	Incorporation of modular PV panels with EMS to handle solar intermittencies effectively.	Solar PV is modeled to account for real-world conditions like irradiance variability, ensuring seamless integration with ESS.	PV systems are connected with BESS and DC charging stations to maximize renewable energy usage.
+Battery Energy Storage System (BESS)	An integrated BESS with dynamic real-time control to manage fluctuations in energy supply.	ESS designed to mitigate solar intermittencies, with optimized capacity based on projected load profiles.	BESS configured for minimal energy loss and efficient operation, tailored for scalability in large EV fleets.
+Simulation/Modeling Tools	- Sliding mode controller for energy dispatch simulations.
+- Real-time monitoring tools to track system performance.	- MATLAB for predictive simulations of energy flows and ESS behavior under various conditions.	- Simulation tools for evaluating BESS performance and cost-benefit analysis for renewable energy systems.
+Results/Outcomes	- Improved PV utilization by 20%.
+- Reduced reliance on grid power by 15%.
+- Enhanced scalability through modularity.	- PV mismatch losses reduced by 18%.
+- Increased system reliability during low solar generation.
+- Stable and predictable EV charging performance.	- Carbon footprint lowered by 25%.
+- Cost efficiency improved by 12%.
+- Scalable design supports large EV charging infrastructures.
+Key Challenges Addressed	- Addressed energy wastage due to solar variability.
+- Designed for scalability to accommodate growing EV demands.	- Tackled solar intermittencies and mismatch between energy supply and EV demand.
+- Improved load prediction for stable system operation.	- Focused on reducing carbon footprint and improving the cost-effectiveness of renewable energy systems.
+BMS Specifications	- Dynamic EMS for real-time energy balancing.
+- Scalable and modular architecture for future expansion.	- Predictive algorithms ensure efficient ESS charging/discharging.
+- High energy density to manage peak EV demands.	- Low-loss BESS tailored for high-efficiency renewable integration.
+- Designed to support low-carbon and cost-efficient energy management.
+Environmental Impact	Significant reduction in fossil fuel dependency through enhanced PV integration.	Improved resource efficiency by minimizing energy wastage and reducing mismatch losses.	Achieved a 25% lower carbon footprint compared to traditional EV charging systems.
+
+Table 5: Comparison of the three conceptual solutions.
+
+1.4. Physical architecture
+ 
+
+
+2. WORK PLAN 
+2.1. Work Breakdown Structure (WBS)
+Solar Power DC Charging Station
+1.1. System Design and Integration
+-1.1.1. Modeling of System
+-1.1.2. Simulation 
+- 1.1.1. Solar Panel System  integration  with Battery Charger  
+- 1.1.3. BMS Design   (  SOC/SOH Algorithms )
+- 1.1.3.1. Monitoring Systems (Voltage, Current, Temperature) 
+1.2. Software Development 
+- 1.2.1. Communication and Data Management
+- 1.2.1.1. Real-time Monitoring Integration
+- 1.2.1.2. Secure Protocols and Testing
+- 1.2.2. Control and User Interface
+- 1.2.2.1. GUI Development
+- 1.2.2.2. Software Updates and Debugging
+1.3. Testing and Validation 
+- 1.3.2. System Integration Testing (ESE)
+- 1.3.2.1. SOC/SOH Accuracy
+- 1.3.2.2. Thermal Management Validation
+- 1.3.2.3. Integration Software
+-system integration testing 
+2.2. Responsibility Matrix (RM)
+
+Task 	Azra	Doga	Yaasin	Mete 	Tuna 
+Decision of system components 	S	S	R	R	S
+Modeling of the system 	S	R	S	S	S 
+Simulation of the system 	R	S	S	S	R
+Integration and design of BMS 	S	S	R	S	S
+Comm.	S	R	S	R	S
+Testing and validation	R	S	S	R	R
+Planning	S	R	S	R	S
+Reporting	R	R	R	R	R
+Integration	S	S	R	R	S
+
+Table 6. Responsibility Matrix for the team
+
+R = Responsible ; S = Support 
+
+
+
+
+2.3. Project Network (PN)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Figure 3. The project network.
+
+
+
+
+
+
+
+
+2.4. Gantt chart
+Table 7 : Gantt Chart
+
+
+
+
+
+ 
+2.5. Costs
+The table below is a forecast of the estimated costs of important components that will be involved in the solar-powered DC charging station, though the list can further be adjusted according to availability and prices. 100 W monocrystalline solar panel supply acts as the main feeding power with renewable energy. Lithium-ion batteries (14 nos), 18650-type, assure the delivery of a very good quality power storage for smooth energy delivery. The use of a small BMS provides safety and efficiency in managing the battery pack, including monitoring and balancing to optimize performance. A Raspberry Pi 5 is proposed for communication and control functions, acting as the central unit for data processing and system operation. Additional materials are yet to be determined, which may influence the final costs of the project. Although these figures are preliminary, they represent the fundamental elements needed to design a functional prototype of the solar-powered charging system.
+Table 8. Costs
+Electrical 
+100W solar panel model: N&D Lighting Lexron 100 Watt Monokristal Solar Güneş Enerji Paneli	2000 ₺
+14 Lth-ion batteries: 18650 Lityum Pil 1200MAH 34GR Şarj Edilebilir Li-Ion Pil 1200MAH-18650 4lülityumpil 	829.15 ₺
+smallBMS
+BMS400100000	2,631₺
+other materials	-
+Total	5460.15 ₺
+
+Communications and Control
+Raspberry : Raspberry Pi 5	4,000₺
+
+System Total	9460.15 ₺
+
+
+2.6. Risk assessment
+The research gave a very important piece of information about overheating risks, battery problems, and environmental issues. This was used to create the risk table and the risk assessment table, making sure the solutions focus on the most important safety concerns.
+The lessons from the accidents included those problems with wiring and fire safety. These helped to identify some risks like a short circuit or overheating for the table. Such a study made it easier to organize the risks and to find ways of fixing the problems.
+Table 9. Risk matrix
+Risk ID	Risk Description	Cause	Likelihood	Severity	Risk Level	Mitigation Measures
+R5	Overheating of Raspberry Pi 5 or BMS causing operational failure or shutdown.	Continuous operation, inadequate cooling, or poor airflow near the Raspberry Pi and BMS.	Low	Moderate (System Shutdown)	Low	-Add small heat sinks or cooling fans to the Raspberry Pi -Ensure proper ventilation in the system enclosure. Monitor system temperature regularly.
+R4	Environmental factors (dust, rain, or temperature extremes) reducing system efficiency.	 Inadequate system enclosures, dust buildup, or overheating in direct sunlight.	 Medium	Moderate (Efficiency Loss)	Medium	 Use weatherproof enclosures for solar panels and batteries (IP65-rated). Ensure airflow and cooling for sensitive components. Periodically clean dust buildup.
+R3	Battery cell imbalance leading to faster degradation of lithium-ion batteries.	Inconsistent charging/discharging cycles or lack of proper balancing via BMS.	Medium	Major (Reduced Battery Life)	Medium	Enable active balancing through the small BMS. Regularly monitor SoC levels. Replace faulty or underperforming cells when detected.
+R2	Short circuit in wiring or connections causing localized overheating.	Damaged insulation, improper wiring, or moisture exposure in outdoor systems.	Medium	Severe (Component Damage)	High	Use properly insulated, outdoor-rated cables. Regularly inspect and test wiring for faults. Install fuses and circuit protection devices.
+R1	Thermal runaway in lithium-ion batteries leading to fire or explosion.	Overcharging, poor BMS monitoring, or excessive current during charging cycles.	High	Critical (Fire, Explosion)	High	Use the BMS for real-time monitoring of voltage, current, and temperature. Add thermal protection and ventilation. Avoid excessive charging beyond safe thresholds.
+
+
+
+
+Table 10. Risk assessment
+
+Risk ID	Risk Description	Likelihood	Severity	Risk Level	What Can Be Done
+R-A1	Batteries might overheat and catch fire or explode.	High	Critical (Severe harm)	High	The BMS must monitor battery voltage, current, and temperature continuously. Proper ventilation and thermal protection (like cooling fans) should be added.
+R-A2	Short circuits in the wiring could cause overheating.	Medium	Severe (Component damage)	High	High-quality insulated cables should be used, and all connections need regular inspection. Adding fuses or other protective devices can help prevent short circuits.
+R-A3	Batteries could become unbalanced, reducing their lifespan.	Medium	Major (Battery damage)	Medium	The BMS should actively balance the batteries to keep their charge levels even. Regular checks of the battery pack's health will ensure longer life.
+RA-4	Weather (like dust, rain, or heat) might affect the system.	Medium	Moderate (Efficiency loss)	Medium	Enclosures that are weatherproof (like IP65-rated) will protect components. Make sure ventilation is good, and clean everything regularly to avoid buildup.
+RA-5	Overheating of the Raspberry Pi or BMS could cause shutdowns.	Low	Moderate (Temporary failure)	Low	Adding small heat sinks or cooling fans will prevent overheating. Good airflow inside the enclosure is also important to keep these components cool.
+
+
+Sources: 
+Rama, V., Muniraj, R., Kohila, J., & Jarin, T. (2024). Solar-based smart EV charging station with smart battery management system. 2024 International Conference on Circuit Power and Computing Technologies. Retrieved from https://ieeexplore.ieee.org
+
+Institute of Energy Storage and Novel Electric Technology. (2021). Accident analysis of Beijing Jimei Dahongmen 25 MWh DC solar-storage-charging integrated station project. Retrieved from https://ctif.org/sites/default/files/2021-05/Accidental%20analysis%20%281%29.pdf
+
+3. Subsystems
+
+3.1. Energy Systems Engineering
+
+3.1.1. Definition of the problem
+A BMS is one of the most important components for a solar-powered DC charging station, since it is in charge of both the incoming solar power and the overall condition of the battery. Solar energy production varies from weather and time of day, which means there can be either too much or not enough energy for EV charging at different times. The Battery Management System (BMS) stores extra energy when there’s a lot of solar power and ensures there’s enough energy to charge vehicles when solar power is low.
+	The primary works of BMS include monitoring the State of Charge and State of Health, where the SOC tells how much charge remains in a battery and SOH is tracking the long run health status showing how effectively it maintains charge over the time period. Precise measurement of SoC, and SoH, cannot be performed effortlessly, as it may include several causes of inaccuracies to prevent further overcharging or undercharging. If this is not done properly, it will have a negative impact on the battery's lifespan and performance. Safety is another important reason for using a BMS.
+	DC fast charging puts heavy loads on batteries, as their capacity can be drained to a state of almost full discharge in a very short period of time, causing them to heat up. The BMS is tuned to continuously observe temperature and current levels to avoid overheating or any other imminent safety risks such as thermal runaway. Thus, a BMS balances the flow of incoming solar power with energy storage and charging demands to maintain the operational safety and efficiency of the whole station for reliable power delivery to electric vehicles.   
+
+
+
+
+
+3.1.2. Review of technologies and methods
+State of Charge
+ 
+Figur 4 :SOC formula 
+SOC(t₀): This represents the initial state of charge of the battery at time t₀. It serves as the starting point for calculating the SOC at any later time.
+  η (Coulomb Efficiency): The Coulomb efficiency represents the efficiency of charge transfer during the charging and discharging processes. For lithium-ion batteries, this value is typically set to 1 due to their high efficiency.
+  Qcell(t): This is the available capacity of the battery at a given time ttt. It reflects the total charge the battery can store at that specific moment, accounting for any degradation.
+i(τ): The current flowing into or out of the battery at any given time τ\tauτ. It is measured as a function of time and is used to integrate the charge transferred.
+ t₀ and t: These are the initial and current time instants, respectively. t0t₀t0 marks the start of the calculation, and ttt is the specific time at which the SOC is being evaluated
+State of Health (SoH):
+
+
+Figure 5 :SOH formula
+•	Qcell(t): Available capacity of the battery at time t, estimated dynamically.
+•	Qcell0: Maximum available capacity of a fresh battery cell.
+
+
+                                                            Figure 6
+•	θk includes Qcell(t), which represents the available capacity of the battery. –
+•	qθ is the process noise, accounting for gradual degradation in the battery’s parameters.
+
+
+
+
+
+
+
+
+Figure 7 : Circuit
+•	Vt = OCV + V1 + V2 + R0ik
+•	OCV refers to the open-circuit voltage, which depends on the battery’s SOC. 
+•	 V1 and V2 are the voltage drops across the RC branches in the battery’s equivalent circuit model.
+•	R0 is the ohmic resistance, which reflects the internal resistance of the battery.  
+•	ik is the current flowing through the battery at the specific time step k.
+
+3.1.3. Standards and constraints (Environmental Effects, Social Effects, Economic
+I found 3 articles 
+
+The economic, social, and environmental impacts brought about by solar-powered charging stations are immense, with integrated BMS. Economically, these stations reduce energy costs, reduce dependence on fossil fuels, and improve energy security. Besides, the installation and maintenance of these charging stations create new job opportunities and stimulate economic growth.
+Socially, the use of renewable sources of energy increases the awareness of the environment in society and promotes sustainable lifestyles. In addition, the development of charging infrastructure, together with the use of electric vehicles, raises the quality of life when it comes to a quiet and clean alternative for transportation in urban areas.
+It is ecologically effective in the struggle against climate change because it reduces carbon emissions. The BMSs extend battery life and reduce waste by ensuring that batteries operate efficiently and safely. In this way, it contributes to the protection of natural resources and the prevention of environmental pollution.
+
+IEC 61851-1	This part of IEC 61851-1 applies to EV charging equipment used for supplying power to electric road vehicles.
+IEC 62196 	Scope This part of IEC 62196 applies to EV plugs, EV socket-outlets, vehicle connectors and vehicle inlets with standardized pin and contact tube arrangements, after This to as accessories.
+IEC 62196-2	This section of IEC 62196 pertains to EV plugs, socket outlets, vehicle connectors, and vehicle inlets that feature standardized pin and contacttube configurations.
+ 
+Table 11: Standards and constraints
+Sources: Can Güven, E., & Gedik, K. (2019). Ömrünü Tamamlamış Elektrikli Araç Bataryalarının Çevresel Yönetimi. Karadag, T. & Dikmen, IC. (2021). Yeni Nesil, Modüler ve Akıllı Batarya Yönetim Sistemi. İşcan, İ. H., Demirel, T. (2023). Yenilenebilir enerji tüketiminin ekonomik büyüme üzerine etkisi ve çevresel kuznets eğrisi hipotezi
+
+3.1.4. Conceptualization and Materialization
+
+3.1.5. Risk assessment
+The identification of possible issues that might result in a loss of safety, efficiency, or reliability are under focus in risk assessment regarding BMS. Some critical risks involve thermal runaway, short circuits in wiring, imbalance of batteries, overheating, and accumulation of dust. Considering such risks, some failure prevention measures that could be proposed are real-time monitoring, enhanced insulation to prevent electrical short circuits, and active balancing of batteries for stability maintenance.
+	Risk assessment is necessary to ensure the safe and efficient operation of the system for a long period. By analysing the likelihood of any given risk and applying necessary solutions, such as improving cooling, using protective housings, and regular maintenance, a BMS can keep a battery healthy and optimal while operating in a large envelope of operating conditions.
+
+3.1.6. Evaluation
+
+3.2. Software Engineering
+3.2.1. Requirements
+Actor	Attribute/Behavior	Description
+User	View Real-Time Data	The user can monitor real-time data such as voltage, current, SOC from the BMS.
+	View Previously Recorded Data	The user can filter and view past data using spesific dates.
+	Export Data	The user can export data and graphs in formats such as CSV, Excel, or image files.
+	Custom Settings	The user can set communication parameters such as baud rate, COM port and adjust visualization settings.
+	Start/Stop Data Aquisition	The user can control when data acquisition starts or stops.
+	View Connection Status	The user can check if the software is successfully connected to the BMS.
+	Create/Access Error Logs	The user can view and export system error logs for troubleshooting.
+
+Actor	Attribute/Behavior	Description
+System	Communicate with BMS	The system establishes communication with the BMS using the appropriate protocols.
+	Parse BMS Data
+
+	The system processes raw data from the BMS into the necessary readable formats.
+
+	Log Data	The system stores real-time data in the database and archives historical data.
+	Generate Graphs	The system produces graphs and charts for real-time and historical data.
+	Error Handling	The system detects, logs, and notifies users of errors.
+	Reconnect to BMS	The system attempts automatic reconnection if communication with the BMS is lost.
+	Provide Feedback	The system displays statuses (“Connected”, “Error” etc.) and action confirmations.
+
+Actor	Attribute/Behavior	Description
+BMS	Send Data	The BMS transmits telemetry data (voltage, current, SOC) to the system.
+	Follow Standards Of Protocols	The BMS ensures data format and transmission adheres to protocol standards (UART, CAN, I2C).
+                                                  
+Table 12
+
+Nonfunctional Requirements
+Performance
+-The system shall process and display data in real time, with less than 1 second of latency.
+-It should support continuous data logging for a period of at least 24 hours without any degradation in performance.
+-Graphs and visualizations shall render within 500 milliseconds of a query or user action.
+Security
+-All input provided by the user, whether configuration settings or date filters, should be validated to avoid any kind of system crashes or misconfigurations.
+- The logged data should be securely stored to avoid unauthorized access and loss of data.
+- Where the BMS supports it, communication shall be performed using secure communication channels so that data in transit is not tampered with.
+Safety
+- The system shall ensure the integrity of the data acquisition and logging processes for accuracy and reliability.
+- Upon failure or instability in the communication with the BMS, the system should immediately notify the user.
+- The system shall prevent the overload of the BMS by controlling the frequency of data requests.
+Business Rules
+-The application shall export data to standard formats like CSV and Excel to fulfill user needs.
+-Open-source libraries shall be preferred wherever possible to reduce development cost and enhance maintainability.
+-The system shall be modular, allowing updates and integration with other tools or systems in the future.
+    3.2.2. Technologies and methods
+The application software of BMS integrates several software components on the efficient acquisition, processing, and visualization of data. The software application operates on a Raspberry Pi OS, and for better functionality, a recent 64-bit version should be used. Python 3.x is used as the programming language in this application because it enables us to use libraries like pyserial for UART communication, python-can for CAN protocol support, and smbus2 for I2C interfaces to communicate with the BMS hardware. Real-time and historical data of batteries, including voltage, current, temperature, and SOC, are stored in the SQLite database, which can be managed through Python's sqlite3 or SQLAlchemy library. The incoming data from the BMS hardware is in telemetry messages via UART, CAN, or I2C. These consist of the most important parameters of the battery that a system will process into structural database entries and visual graphs. Outgoing messages include configurations to be sent to the BMS for setting certain changes or requesting data. Also, the system allows us to export data and generate CSV or Excel files for external use. The communication between components is event-driven for responsiveness; the graphical interface, implemented with PyQt or Tkinter, provides an interactive way for users to view data and manage the system efficiently. This setup supports real-time monitoring, secure data storage, and communication for reliable battery management.
+Database Managment System
+The DBMS used for this project is SQLite, which is an open-source, lightweight, and serverless database solution. SQLite is maintained by the SQLite Consortium, and the latest stable version is used in this project, such as SQLite 3.43 or higher. Its self-contained architecture eliminates the need for a separate database server, making it ideal for deployment on resource-constrained devices like the Raspberry Pi. SQLite is a file-based storage mechanism, and it ensures that all the database operations are done within a single file, making setup and maintenance easier.
+
+For connecting to the database with the software, Python's built-in sqlite3 library is used. The application establishes a connection to the database by creating or opening an SQLite database file directly in the application's directory, such as battery_data.db. The sqlite3.connect() method initiates the connection to this database file. The cursor object is created for executing SQL queries in the case of creating tables, data inserting, record retrieving, and updating management. Integration in this way allows the application logics to interact smoothly with the database layer. The handling mechanism for errors, including connection problems or errors due to queries, ensures that the database operations are carried out in a robust and reliable way. This accesses the SQLite database in real-time, allowing for continuous logging of battery telemetry data and retrieval of historic data for analysis and visualization within the application.
+
+Tables in the Data Schema
+BatteryData Table
+Purpose: Stores real-time and historical battery telemetry data.
+Columns:
+-id (Primary Key, INTEGER): A unique identifier for each record.
+-timestamp (DATETIME): The date and time when the data was logged.
+-voltage (REAL): The battery's voltage in volts.
+-current (REAL): The current in amperes.
+-temperature (REAL): The battery’s temperature in degrees Celsius.
+-state_of_charge (REAL): The battery's state of charge as a percentage.
+Configuration Table
+Purpose: Stores application settings and communication parameters.
+Columns:
+-id (Primary Key, INTEGER): A unique identifier for each configuration.
+-parameter_name (TEXT): The name of the configuration parameter (e.g., baud_rate, can_id).
+-value (TEXT): The value of the configuration parameter.
+-last_updated (DATETIME): The timestamp when the configuration was last modified.
+
+
+ErrorLogs Table
+Purpose: Stores error messages and system events for debugging and maintenance.
+Columns:
+-id (Primary Key, INTEGER): A unique identifier for each error log.
+-timestamp (DATETIME): The date and time when the error occurred.
+-error_message (TEXT): A description of the error or event.
+-severity (TEXT): The severity level of the error (Info, Warning, Critical etc.).
+ExportLogs Table
+Purpose: Keeps track of data exports performed by the user.
+Columns:
+-id (Primary Key, INTEGER): A unique identifier for each export event.
+-timestamp (DATETIME): The date and time of the export.
+-file_path (TEXT): The file path where the data was exported.
+-export_format (TEXT): The format of the exported data (CSV, Excel).
+
+Relationships Between Tables
+BatteryData and Configuration:
+These tables are loosely related, with the Configuration table controlling the parameters (e.g., baud_rate) that govern how telemetry data is collected in the BatteryData table.
+
+BatteryData and ErrorLogs:
+There is an indirect relationship where errors in telemetry collection or communication are logged in the ErrorLogs table, referencing the timestamp to match issues with specific telemetry records.
+
+ExportLogs and BatteryData:
+The ExportLogs table references the BatteryData table implicitly, as data exported is always derived from the telemetry records stored in BatteryData.
+(will add example sql code here for the tables)
+ 
+Figure 8
+3.2.3. Conceptualization
+Actor glossiary fort his project:
+1.System Administrator: The System Administrator is responsible for the installation, configuration, and overall management of the Battery Management System (BMS) software on the Raspberry Pi. This actor handles the hardware setup, configures communication parameters, and ensures that the system is operating smoothly.
+Role:
+-Install and configure the software on the Raspberry Pi.
+-Configure the communication settings with the BMS hardware (such as UART, CAN, or I2C).
+-Monitor system performance and handle software or hardware failures.
+-Update system settings and software when needed (e.g., adjusting configuration parameters or running software updates).
+Interactions:
+-Modify the configuration settings in the Configuration table.
+-View and analyze logs stored in the ErrorLogs table.
+-Ensure correct hardware operation and connection with the Raspberry Pi.
+2. End User: This actor uses the BMS application to monitor the battery performance, view live data, and generate reports for analysis or further action. 
+Role:
+-View real-time battery data, including voltage, current, temperature, and state of charge.
+-Review historical data through graphs and trends to assess battery health and performance.
+-Export telemetry data into CSV or Excel formats for further analysis or reporting.
+Interactions:
+-Query and retrieve data from the BatteryData table for analysis.
+-Generate and export data logs, saving entries in the ExportLogs table.
+-Use the graphical interface to interact with the data and receive real-time updates.
+3.BMS Applicaton: The BMS hardware provides data to the software and receives commands for configuration and control. It communicates with the Raspberry Pi via UART, CAN, or I2C protocols. This is the main goal of this application.
+Role:
+-Send real-time telemetry data to the Raspberry Pi, including battery voltage, current, temperature, and state of charge (SOC).
+-Receive configuration parameters from the software, such as sampling rates, thresholds, or charging settings.
+-Respond to system queries or requests for specific data points.
+Interactions:
+-Provide telemetry data, which is parsed and stored in the BatteryData table for further use.
+-Communicate data in real-time and upon request by the user.
+-Process configuration commands based on settings in the Configuration table.
+Use-case Glossary
+Use-case Name	Description	Participating Actors
+Monitor Battery Data	Allows the End User to view real-time telemetry data from the BMS.	BMS Applicaton
+Configure System Settings	Enables the System Administrator to manage configurations such as sampling rates and communication settings.	System Administrator
+Log Errors	Automatically records system errors into the ErrorLogs table.	Battery Management System (BMS)
+Export Data	Allows End User to export historical data in CSV or Excel format.	End User
+Login	Ensures secure access by requiring login credentials for different actor roles.	Battery Management System (BMS) Applicaton
+  
+Table 13
+Use-case Scenarios
+Use-case Name	Login
+Use-case Description	Ensures secure access by requiring login credentials for different actor roles.
+Actors	End User,BMS Applicaton
+Pre-Condition	System must be connected to a network and also connected to the BMS and plugged into a power source.
+Post-Condition	System is available to use and configure.
+Normal Flow	Step1 : User enters username and password.
+Step2 : Authentication service validates user’s username and password.
+Step3 : The system will be unlocked.
+Business Rules	After 3 unsuccessfull login attemps the system will terminate.
+Table 14
+
+
+
+
+
+
+
+
+
+
+Data flow diagram:
+ 
+Figure 9
+User Interactions: Users interact through the GUI Layer for tasks like monitoring data, exporting, or configuring settings.
+Security Layer: Ensures secure authentication and encrypted communication with the BMS.
+Communication Module: Handles data flow between the software system and the BMS, managing real-time telemetry data.
+Data Manager: Validates and processes telemetry data, updates configurations, and interfaces with the database.
+Database: Stores telemetry data, configurations, error logs, and exported files.
+Export Function: Converts stored telemetry data into user-friendly formats like CSV or Excel for reporting.
+    3.2.4. Physical architecture
+In this capstone project, we decided on using a client-server architecture; hence, the Raspberry Pi acts as a server that interfaces directly with the BMS. Software will be a desktop application to be developed in the Capstone 2 class. Layers of the software architecture are as follows: 
+
+Presentation Layer: Provides the user interface for interaction with the system. Components are as follows:
+Desktop GUI: Implemented in Python using the Tkinter library; includes real-time graphs, configuration screens, and export options.
+Graphing Tools: Utilizes Matplotlib for real-time visualization of data received, such as voltage, current, state of charge, and more.
+Input Validation: Ensures that user inputs-such as sampling rates or file paths-are valid and formatted correctly.
+
+Application Layer: This encapsulates the core logic of a software program. Components are as follows:
+Data Processing: The data is fed in real-time from the BMS via serial communication, such as UART, SPI, or I2C. It processes and filters the data for meaningful display and storage.
+Configuration Management: Applies settings such as sampling rates, communication protocols in real time, and also validates and saves configurations in the database.
+Error Handling: Errors are logged into the ErrorLogs table automatically for future troubleshooting.
+Authentication: User credentials are checked to validate their access to the interface.
+
+Data Layer: concerned with data storage, retrieval, and persistence. The database connects locally between the database file and the desktop application. For database operations, Python will utilize its sqlite3 library. Supports CRUD on tables. SQLite Database Schema (tables numbered below):
+1.BatteryData Table: real-time and/or historical telemetry data.
+2.Configuration Table: system parameters that include sampling rates.
+3.ErrorLogs Table: Maintains a log of errors with timestamps and severity.
+
+Hardware Interface: Creates the communication between the Raspberry Pi and the BMS hardware. The Raspberry Pi 4 Model B is equipped with GPIO pins and supports serial communication protocols like UART, SPI, and I2C. The Pi reads telemetry data from the BMS hardware (voltage, current, state of charge). Any anomalies in hardware communication are logged in the ErrorLogs table.
+
+Communication Flow
+1. Telemetry Data Input: The BMS will send the telemetry data through serial communication to the Raspberry Pi.
+2. Parsing and Data Processing: Parse raw data received from BMS and extract meaningful metrics.
+The final data logged in the database also shows the real-time view in the GUI.
+3. Data Output: The changes made in the GUI are written in the database and, at the same time, applied to the hardware interface. In case of any errors, error messages will be displayed on the GUI and logged in the database for error handling. Historical data export to CSV or Excel is also possible.
+
+Tools and Libraries: The project will be developed in python because of the robustness of the libraries it offers. Python language is one of the industry standards when it comes to handling data, making it the perfect choice. For the hardware side, the Raspberry Pi offers versatility and is very economically friendly; hence, the idea choice of hardware for the project, and it also has good community support. It provides the GPIOs and inbuilt serial communication support for UART, SPI, and I2C serial protocols required to communicate with the BMS module.
+Libraries:
+Tkinter: Used for GUI development.
+Matplotlib: Used for real-time graphing and visualization.
+sqlite3: Database handling.
+pyserial: To establish serial communication with the BMS hardwares.
+os and csv: Used for file handling to export data.
+Hardware: Raspberry Pi 4 Model B connected with BMS through UART.
+    3.2.5. Materialization
+The implementation will follow an agile methodology with regular iterations. Hardware sourcing, such as the Raspberry Pi and related components, will be completed in Week 1 and 2. Workshops and online resources will be used for software and hardware integration. Weekly reviews and updates will ensure progress aligns with the planned timeline.
+    3.2.6. Evaluation
+The primary goals are to verify data accuracy, ensure real-time processing capability, and validate security mechanisms.
+Planned Experiments and Testing
+Communication and Data Accuracy Testing
+Objective: Verify the accuracy and reliability of telemetry data transmission from the BMS to the Raspberry Pi.
+Experiment: Simulate telemetry data using a BMS simulator or a controlled environment. Compare the received data with known values to detect discrepancies.
+Data Collected:
+Received voltage, current, temperature, and state-of-charge values.
+Transmission error rates.
+Analysis: Calculate error percentages and assess communication stability under varying conditions (e.g., noise, high-frequency updates).
+Real-Time Monitoring Performance Evaluation
+Objective: Assess the sub-system’s ability to process and display real-time data without delays.
+Experiment: Introduce high-frequency telemetry updates (e.g., 1-second intervals) and measure the system’s latency in processing and displaying the data.
+Data Collected: 
+Time lag between data reception and display.
+CPU and memory usage during operation.
+Analysis: Determine if the latency and resource usage fall within acceptable limits.
+GUI Usability Testing
+Objective: Ensure the user interface is intuitive and responsive.
+Experiment: Conduct user testing with participants simulating different roles (e.g., System Administrator, End User). Record their ability to navigate features such as real-time monitoring, settings configuration, and exporting data.
+Data Collected:
+Task completion time for each feature.
+User satisfaction scores through a questionnaire.
+Analysis: Identify areas of difficulty and refine the interface based on feedback.
+Error Detection and Logging Validation
+Objective: Validate the sub-system's ability to detect and log system errors effectively.
+Experiment: Introduce anomalies like invalid data, communication failures, or out-of-range telemetry values. Observe the system’s response and log creation.
+Data Collected:
+Logged errors with timestamps and descriptions.
+System recovery time.
+Analysis: Review logs for completeness and accuracy, ensuring all anomalies are appropriately captured.
+Export Functionality Testing
+Objective: Verify that historical data export works as expected in multiple formats.
+Experiment: Simulate database queries for large datasets and export them in CSV and Excel formats.
+Data Collected:
+File generation time.
+Completeness and accuracy of exported data.
+Analysis: Compare exported data against database records and measure performance for large datasets.
+ 
+
+4. INTEGRATION AND EVALUATION
+4.1. Integration
+
+
+
+
+
+
+
+
+
+
+Figure 10 : Integration Chart
+
+4.2. Evaluation
+
+
+ 
+5. SUMMARY AND CONCLUSION
+
+ACKNOWLEDGEMENTS
+We wish to thank our adviser Title Name Surname for ..... . Also acknowledge any other help/support from friends, technicians and other staff etc... 
+This work was partly/wholly funded by Bahçeşehir University (remove this if are not requesting funding).
+REFERENCES
+1.	https://www.mokoenergy.com/active-balancing-bms/
+2.	Chowdhury, S., Shaheed, M. N. B., & Sozer, Y. (2021). State-of-charge balancing control for modular battery system with output DC bus regulation. IEEE Transactions on Transportation Electrification, 7(4), 2181-2193.
+Source of table: Pesaran, A. A., Keyser, M., et al. (2012). State of Charge Estimation for 
+3.	Lithium-Ion Batteries Using Coulomb Counting. Journal of Power Sources
+4.	Harris, A., Cox, R., & Nasipuri, A. Technical Report: Battery Modeling and Performance Metrics.
+5.	Omar, N., Hegazy, O., Mulder, G., Bossche, P. V., Mierlo, J. V., & Timmermans, J.-M. (2022). A review on battery management systems and its application in electric vehicles. IEEE Xplore. https://doi.org/10.1109/9708114
+6.	Rama, V., Muniraj, R., Kohila, J., & Jarin, T. (2024). Solar-based smart EV charging station withsmart battery management system. 2024 International Conference on Circuit Power and Computing Technologies
+7.	BloombergNEF. (2023). Electric vehicle outlook 2023. Bloomberg Finance L.P.
+Chae, S. (2022). Advances in lithium-ion battery technology. Energy & Environmental Materials, 6(3), 501–511.
+8.	Goodenough, J. B. (2020). Rethinking the Li-battery. Energy & Environmental Science, 7(1), 14–18.
+Tarascon, J.-M., & Armand, M. (2021). Issues and challenges facing rechargeable lithium batteries. Nature, 414(6861), 359–367
+9.	Rama, V., Muniraj, R., Kohila, J., & Jarin, T. (2024). Solar-based smart EV charging station with smart battery management system. 2024 International Conference on Circuit Power and Computing Technologies. Retrieved from https://ieeexplore.ieee.org
+
+10.	Institute of Energy Storage and Novel Electric Technology. (2021). Accident analysis of Beijing Jimei Dahongmen 25 MWh DC solar-storage-charging integrated station project. Retrieved from https://ctif.org/sites/default/files/2021-05/Accidental%20analysis%20%281%29.pdf
+
+11.	Can Güven, E., & Gedik, K. (2019). Ömrünü Tamamlamış Elektrikli Araç Bataryalarının Çevresel Yönetimi. Karadag, T. & Dikmen, IC. (2021). 
+
+12.	Yeni Nesil, Modüler ve Akıllı Batarya Yönetim Sistemi. İşcan, İ. H., Demirel, T. (2023). Yenilenebilir enerji tüketiminin ekonomik büyüme üzerine etkisi ve çevresel kuznets eğrisi hipotezi
+
+13.	https://docs.python.org/3/
+14.	https://www.sqlite.org/docs.html
+
+15.	https://docs.python.org/3/library/tk.html
+
+16.	https://matplotlib.org/stable/index.html
+
+17.	https://www.raspberrypi.com/documentation/
+
+
+
+
+
+APPENDIX A
+Information that does not fit naturally into the main body of the report can be put into an appendix. Typically this would be long sections of software code, product user manuals, large tables of validation results, etc.
+	An example of providing source code is shown in this appendix. Display the source code in a monospace (fixed-width) font and single-spaced. 
+
+Alternatively give a link to an online code repository.
+
+
+Code for packing (and unpacking) an occupancy value [0,1] into an unsigned char. 
+
+
+    // maximum error = +-0.25% (standard dev. = 0.5/sqrt(12)
+    // 0% and 100% occupancies are stored exactly.
+
+    unsigned char occByte;
+    if      (occ==0.0) { occByte = 254; } // 0% occupancy stored exactly
+    else if (occ==1.0) { occByte = 255; } // 100% occupancy stored exactly
+    else               { occByte = int(occ*200.0); }
+
+    // unpack occupancy
+    float occFlot;
+    if      (occByte==254) { occFlot = 0.0; }
+    else if (occByte==255) { occFlot = 1.0; }
+    else                   { occFlot = (occByte+0.5)/200.0; }
+
+
+
+
+APPENDIX B
+Another appendix can go here.
+
