@@ -27,7 +27,6 @@ class BMSGUI:
         self.collection_thread = None
 
     def create_frames(self):
-        # Create main layout frames
 
         self.connection_frame = ttk.LabelFrame(self.root, text="Connection Settings", padding="5")
         self.connection_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
@@ -45,25 +44,21 @@ class BMSGUI:
         self.root.grid_rowconfigure(1, weight=1)
 
     def create_connection_panel(self):
-        # Create connection settings panel
 
         ttk.Label(self.connection_frame, text="COM Port:").grid(row=0, column=0, padx=5, pady=5)
         self.port_var = tk.StringVar(value="COM1")
         self.port_entry = ttk.Entry(self.connection_frame, textvariable=self.port_var)
         self.port_entry.grid(row=0, column=1, padx=5, pady=5)
         
-        # Baud Rate selection
         ttk.Label(self.connection_frame, text="Baud Rate:").grid(row=0, column=2, padx=5, pady=5)
         self.baud_var = tk.StringVar(value="9600") # Default baud rate
         self.baud_entry = ttk.Entry(self.connection_frame, textvariable=self.baud_var)
         self.baud_entry.grid(row=0, column=3, padx=5, pady=5)
         
-        # Connect/Disconnect button
         self.connect_button = ttk.Button(self.connection_frame, text="Connect", command=self.toggle_connection)
         self.connect_button.grid(row=0, column=4, padx=5, pady=5)
 
     def create_real_time_display(self):
-        # Create real-time data display panel
 
         ttk.Label(self.display_frame, text="Voltage (V):").grid(row=0, column=0, padx=5, pady=5)
         self.voltage_var = tk.StringVar(value="0.0")
@@ -83,7 +78,6 @@ class BMSGUI:
         ttk.Label(self.display_frame, textvariable=self.soc_var).grid(row=3, column=1, padx=5, pady=5)
 
     def create_graphs(self):
-        # Create graphs for data visualization
 
         self.fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(6, 6))
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
@@ -107,7 +101,6 @@ class BMSGUI:
         self.fig.tight_layout()
 
     def create_control_panel(self):
-        # Create control panel with buttons
 
         self.start_button = ttk.Button(self.control_frame, text="Start Monitoring", command=self.toggle_monitoring)
         self.start_button.grid(row=0, column=0, padx=5, pady=5)
@@ -119,7 +112,6 @@ class BMSGUI:
         self.clear_button.grid(row=0, column=2, padx=5, pady=5)
 
     def toggle_connection(self):
-        # Toggle BMS connection
 
         if not self.bms.connected:
             self.bms.update_configuration('com_port', self.port_var.get())
@@ -135,8 +127,6 @@ class BMSGUI:
             self.connect_button.configure(text="Connect")
 
     def toggle_monitoring(self):
-        # Toggle data collection
-
         if not self.data_collection_active:
             self.data_collection_active = True
             self.start_button.configure(text="Stop Monitoring")
@@ -148,8 +138,6 @@ class BMSGUI:
             self.start_button.configure(text="Start Monitoring")
 
     def collect_data(self):
-        # Collect data from BMS
-
         while self.data_collection_active:
             if self.bms.connected:
                 data = self.bms.read_data()
@@ -161,10 +149,9 @@ class BMSGUI:
                     
                     self.update_graphs()
             
-            time.sleep(1)  # Update every second
+            time.sleep(1)
 
     def update_graphs(self):
-        # Update graph data
         try:
             conn = sqlite3.connect('database/battery_data.db')
 
@@ -194,8 +181,6 @@ class BMSGUI:
             messagebox.showerror("Error", f"Failed to update graphs: {str(e)}")
 
     def export_data(self):
-        # Export data to CSV
-
         try:
             conn = sqlite3.connect('database/battery_data.db')
             df = pd.read_sql_query("SELECT * FROM BatteryData", conn)
@@ -218,8 +203,6 @@ class BMSGUI:
             messagebox.showerror("Error", f"Failed to export data: {str(e)}")
 
     def clear_data(self):
-        # Clear all displayed data
-
         if messagebox.askyesno("Confirm", "Are you sure you want to clear all data?"):
             try:
                 conn = sqlite3.connect('database/battery_data.db')
@@ -228,12 +211,12 @@ class BMSGUI:
                 conn.commit()
                 conn.close()
                 
-                self.voltage_var.set("0.0") # Reset displays
+                self.voltage_var.set("0.0") 
                 self.current_var.set("0.0")
                 self.temp_var.set("0.0")
                 self.soc_var.set("0.0")
                 
-                for line in [self.voltage_line, self.current_line, self.temp_line, self.soc_line]: # Clear graphs
+                for line in [self.voltage_line, self.current_line, self.temp_line, self.soc_line]:
                     line.set_data([], [])
                 self.canvas.draw()
                 

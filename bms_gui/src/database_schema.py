@@ -4,10 +4,8 @@ from datetime import datetime
 
 def create_database():
     try:
-        # Ensure database directory exists
         os.makedirs('database', exist_ok=True)
         
-        # SQLite database with required tables
         conn = sqlite3.connect('database/battery_data.db')
         cursor = conn.cursor()
 
