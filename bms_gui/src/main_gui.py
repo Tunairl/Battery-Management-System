@@ -15,45 +15,38 @@ class BMSGUI:
         self.root.title("Battery Management System")
         self.root.geometry("1200x800")
         
-        # Initialize BMS Communication
         self.bms = BMSCommunication()
         self.data_collection_active = False
         
-        # Create main frames
         self.create_frames()
         self.create_connection_panel()
         self.create_real_time_display()
         self.create_graphs()
         self.create_control_panel()
         
-        # Initialize data collection thread
         self.collection_thread = None
 
     def create_frames(self):
-        """Create main layout frames"""
-        # Top frame for connection settings
+        # Create main layout frames
+
         self.connection_frame = ttk.LabelFrame(self.root, text="Connection Settings", padding="5")
         self.connection_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
         
-        # Left frame for real-time display
         self.display_frame = ttk.LabelFrame(self.root, text="Real-time Data", padding="5")
         self.display_frame.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
         
-        # Right frame for graphs
         self.graph_frame = ttk.LabelFrame(self.root, text="Graphs", padding="5")
         self.graph_frame.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
         
-        # Bottom frame for controls
         self.control_frame = ttk.LabelFrame(self.root, text="Controls", padding="5")
         self.control_frame.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
         
-        # Configure grid weights
         self.root.grid_columnconfigure(1, weight=1)
         self.root.grid_rowconfigure(1, weight=1)
 
     def create_connection_panel(self):
-        """Create connection settings panel"""
-        # COM Port selection
+        # Create connection settings panel
+
         ttk.Label(self.connection_frame, text="COM Port:").grid(row=0, column=0, padx=5, pady=5)
         self.port_var = tk.StringVar(value="COM1")
         self.port_entry = ttk.Entry(self.connection_frame, textvariable=self.port_var)

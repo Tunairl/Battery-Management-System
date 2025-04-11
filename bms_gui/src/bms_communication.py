@@ -6,7 +6,7 @@ import logging
 
 class BMSCommunication:
     def __init__(self, port='COM1', baud_rate=9600):
-        """Initialize BMS communication"""
+        # Initialize BMS communication
         self.port = port
         self.baud_rate = baud_rate
         self.serial_conn = None
@@ -20,7 +20,7 @@ class BMSCommunication:
         )
 
     def connect(self):
-        """Establish serial connection with BMS"""
+        # Establish serial connection with BMS 
         try:
             self.serial_conn = serial.Serial(
                 port=self.port,
@@ -35,14 +35,14 @@ class BMSCommunication:
             return False
 
     def disconnect(self):
-        """Close serial connection"""
+        # Close serial connection
         if self.serial_conn and self.serial_conn.is_open:
             self.serial_conn.close()
             self.connected = False
             self.log_error("BMS Connection closed", "INFO")
 
     def read_data(self):
-        """Read data from BMS and return parsed values"""
+        # Read data from BMS and return parsed values
         if not self.connected:
             return None
 
@@ -67,7 +67,7 @@ class BMSCommunication:
             return None
 
     def save_to_database(self, data):
-        """Save the received data to SQLite database"""
+        # Save the received data to SQLite database
         try:
             conn = sqlite3.connect('database/battery_data.db')
             cursor = conn.cursor()
@@ -89,7 +89,7 @@ class BMSCommunication:
             self.log_error(f"Database error: {str(e)}", "ERROR")
 
     def log_error(self, message, severity):
-        """Log errors to both file and database"""
+        # Log errors to both file and database
         try:
             # Log to file
             if severity == "ERROR":
@@ -112,7 +112,7 @@ class BMSCommunication:
             logging.error(f"Failed to log error: {str(e)}")
 
     def update_configuration(self, parameter, value):
-        """Update configuration parameters"""
+        # Update configuration parameters
         try:
             conn = sqlite3.connect('database/battery_data.db')
             cursor = conn.cursor()

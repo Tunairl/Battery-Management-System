@@ -2,11 +2,10 @@ import sqlite3
 from datetime import datetime
 
 def create_database():
-    """Create SQLite database with required tables"""
+    # SQLite database with required tables
     conn = sqlite3.connect('database/battery_data.db')
     cursor = conn.cursor()
 
-    # Create BatteryData table
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS BatteryData (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,7 +17,6 @@ def create_database():
     )
     ''')
 
-    # Create Configuration table
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS Configuration (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,7 +26,7 @@ def create_database():
     )
     ''')
 
-    # Create ErrorLogs table
+    
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS ErrorLogs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

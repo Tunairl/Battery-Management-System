@@ -5,7 +5,7 @@ from main_gui import BMSGUI
 import tkinter as tk
 
 def main():
-    """Main entry point for the BMS GUI application"""
+    # Main entry point for the BMS GUI application
     try:
         # Create database directory if it doesn't exist
         os.makedirs('database', exist_ok=True)
