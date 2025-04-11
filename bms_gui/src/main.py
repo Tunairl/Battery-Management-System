@@ -7,13 +7,10 @@ import tkinter as tk
 def main():
     # Main entry point for the BMS GUI application
     try:
-        # Create database directory if it doesn't exist
         os.makedirs('database', exist_ok=True)
         
-        # Initialize database
         create_database()
         
-        # Create and run GUI
         root = tk.Tk()
         app = BMSGUI(root)
         root.mainloop()
