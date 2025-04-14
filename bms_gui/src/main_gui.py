@@ -19,7 +19,7 @@ class BMSGUI:
         self.data_collection_active = False
         
         self.voltage_threshold = 12.0
-        self.temp_threshold = 25.0
+        self.temp_threshold = 30.0
         
         self.create_frames()
         self.create_connection_panel()
