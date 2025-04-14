@@ -18,6 +18,10 @@ class BMSGUI:
         self.bms = BMSCommunication()
         self.data_collection_active = False
         
+        # Warning thresholds
+        self.voltage_threshold = 12.0
+        self.temp_threshold = 25.0
+        
         self.create_frames()
         self.create_connection_panel()
         self.create_real_time_display()
@@ -51,18 +55,20 @@ class BMSGUI:
         self.port_entry.grid(row=0, column=1, padx=5, pady=5)
         
         ttk.Label(self.connection_frame, text="Baud Rate:").grid(row=0, column=2, padx=5, pady=5)
-        self.baud_var = tk.StringVar(value="9600") # Default baud rate
-        self.baud_entry = ttk.Entry(self.connection_frame, textvariable=self.baud_var)
-        self.baud_entry.grid(row=0, column=3, padx=5, pady=5)
+        self.baud_var = tk.StringVar(value="9600")
+        baud_rates = ["9600", "19200", "38400", "57600", "115200"]
+        self.baud_combo = ttk.Combobox(self.connection_frame, textvariable=self.baud_var, values=baud_rates, state="readonly")
+        self.baud_combo.grid(row=0, column=3, padx=5, pady=5)
         
         self.connect_button = ttk.Button(self.connection_frame, text="Connect", command=self.toggle_connection)
         self.connect_button.grid(row=0, column=4, padx=5, pady=5)
 
     def create_real_time_display(self):
-
         ttk.Label(self.display_frame, text="Voltage (V):").grid(row=0, column=0, padx=5, pady=5)
         self.voltage_var = tk.StringVar(value="0.0")
         ttk.Label(self.display_frame, textvariable=self.voltage_var).grid(row=0, column=1, padx=5, pady=5)
+        self.voltage_warning = ttk.Label(self.display_frame, text="", foreground="red")
+        self.voltage_warning.grid(row=0, column=2, padx=5, pady=5)
         
         ttk.Label(self.display_frame, text="Current (A):").grid(row=1, column=0, padx=5, pady=5)
         self.current_var = tk.StringVar(value="0.0")
@@ -71,8 +77,9 @@ class BMSGUI:
         ttk.Label(self.display_frame, text="Temperature (°C):").grid(row=2, column=0, padx=5, pady=5)
         self.temp_var = tk.StringVar(value="0.0")
         ttk.Label(self.display_frame, textvariable=self.temp_var).grid(row=2, column=1, padx=5, pady=5)
+        self.temp_warning = ttk.Label(self.display_frame, text="", foreground="red")
+        self.temp_warning.grid(row=2, column=2, padx=5, pady=5)
         
-        # State of Charge display
         ttk.Label(self.display_frame, text="State of Charge (%):").grid(row=3, column=0, padx=5, pady=5)
         self.soc_var = tk.StringVar(value="0.0")
         ttk.Label(self.display_frame, textvariable=self.soc_var).grid(row=3, column=1, padx=5, pady=5)
@@ -83,17 +90,17 @@ class BMSGUI:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         
-        self.voltage_line, = self.ax1.plot([], [], label='Voltage') # Initilization of empty plots
+        self.voltage_line, = self.ax1.plot([], [], label='Voltage') 
         self.current_line, = self.ax1.plot([], [], label='Current')
         self.temp_line, = self.ax2.plot([], [], label='Temperature')
         self.soc_line, = self.ax2.plot([], [], label='SOC')
         
-        self.ax1.set_title('Voltage and Current') # Setting the title of the first plot
+        self.ax1.set_title('Voltage and Current') 
         self.ax1.set_xlabel('Time')
         self.ax1.set_ylabel('Value')
         self.ax1.legend()
         
-        self.ax2.set_title('Temperature and SOC') # Setting the title of the second plot
+        self.ax2.set_title('Temperature and SOC')
         self.ax2.set_xlabel('Time')
         self.ax2.set_ylabel('Value')
         self.ax2.legend()
@@ -137,15 +144,35 @@ class BMSGUI:
             self.data_collection_active = False
             self.start_button.configure(text="Start Monitoring")
 
+    def check_warnings(self, voltage, temperature):
+        if voltage > self.voltage_threshold:
+            self.voltage_warning.config(text="⚠ High Voltage!")
+        else:
+            self.voltage_warning.config(text="")
+            
+        if temperature > self.temp_threshold:
+            self.temp_warning.config(text="⚠ High Temperature!")
+        else:
+            self.temp_warning.config(text="")
+            
+        if voltage > self.voltage_threshold and temperature > self.temp_threshold:
+            messagebox.showwarning("Warning", 
+                f"Critical Condition!\nVoltage: {voltage:.2f}V (Threshold: {self.voltage_threshold}V)\nTemperature: {temperature:.2f}°C (Threshold: {self.temp_threshold}°C)")
+
     def collect_data(self):
         while self.data_collection_active:
             if self.bms.connected:
                 data = self.bms.read_data()
                 if data:
-                    self.voltage_var.set(f"{data['voltage']:.2f}")
+                    voltage = data['voltage']
+                    temperature = data['temperature']
+                    
+                    self.voltage_var.set(f"{voltage:.2f}")
                     self.current_var.set(f"{data['current']:.2f}")
-                    self.temp_var.set(f"{data['temperature']:.2f}")
+                    self.temp_var.set(f"{temperature:.2f}")
                     self.soc_var.set(f"{data['state_of_charge']:.2f}")
+                    
+                    self.check_warnings(voltage, temperature)
                     
                     self.update_graphs()
             
