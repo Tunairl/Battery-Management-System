@@ -18,7 +18,6 @@ class BMSGUI:
         self.bms = BMSCommunication()
         self.data_collection_active = False
         
-        # Warning thresholds
         self.voltage_threshold = 12.0
         self.temp_threshold = 25.0
         
