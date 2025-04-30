@@ -84,25 +84,49 @@ class BMSGUI:
         ttk.Label(self.display_frame, textvariable=self.soc_var).grid(row=3, column=1, padx=5, pady=5)
 
     def create_graphs(self):
-
-        self.fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(6, 6))
+        self.fig = plt.figure(figsize=(10, 8))
+        
+        # Create 2x2 grid of graphs
+        self.ax1 = self.fig.add_subplot(2, 2, 1)  # Voltage (top-left)
+        self.ax2 = self.fig.add_subplot(2, 2, 2)  # Current (top-right)
+        self.ax3 = self.fig.add_subplot(2, 2, 3)  # Temperature (bottom-left)
+        self.ax4 = self.fig.add_subplot(2, 2, 4)  # SOC (bottom-right)
+        
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         
-        self.voltage_line, = self.ax1.plot([], [], label='Voltage') 
-        self.current_line, = self.ax1.plot([], [], label='Current')
-        self.temp_line, = self.ax2.plot([], [], label='Temperature')
-        self.soc_line, = self.ax2.plot([], [], label='SOC')
+        # Create individual lines for each graph
+        self.voltage_line, = self.ax1.plot([], [], 'b-', label='Voltage')
+        self.current_line, = self.ax2.plot([], [], 'g-', label='Current')
+        self.temp_line, = self.ax3.plot([], [], 'r-', label='Temperature')
+        self.soc_line, = self.ax4.plot([], [], 'm-', label='SOC')
         
-        self.ax1.set_title('Voltage and Current') 
-        self.ax1.set_xlabel('Time')
-        self.ax1.set_ylabel('Value')
-        self.ax1.legend()
+        # Add threshold lines
+        self.voltage_threshold_line = self.ax1.axhline(y=self.voltage_threshold, color='red', linestyle='--', linewidth=2, label=f'Threshold ({self.voltage_threshold}V)')
+        self.temp_threshold_line = self.ax3.axhline(y=self.temp_threshold, color='red', linestyle='--', linewidth=2, label=f'Threshold ({self.temp_threshold}°C)')
         
-        self.ax2.set_title('Temperature and SOC')
-        self.ax2.set_xlabel('Time')
-        self.ax2.set_ylabel('Value')
-        self.ax2.legend()
+        # Configure each graph
+        self.ax1.set_title('Voltage (V)')
+        self.ax1.set_ylabel('Voltage')
+        self.ax1.legend(loc='upper right')
+        self.ax1.grid(True)
+        
+        self.ax2.set_title('Current (A)')
+        self.ax2.set_ylabel('Current')
+        self.ax2.legend(loc='upper right')
+        self.ax2.grid(True)
+        
+        self.ax3.set_title('Temperature (°C)')
+        self.ax3.set_xlabel('Time')
+        self.ax3.set_ylabel('Temperature')
+        self.ax3.legend(loc='upper right')
+        self.ax3.grid(True)
+        
+        self.ax4.set_title('State of Charge (%)')
+        self.ax4.set_xlabel('Time')
+        self.ax4.set_ylabel('SOC')
+        self.ax4.legend(loc='upper right')
+        self.ax4.grid(True)
         
         self.fig.tight_layout()
 
@@ -146,6 +170,7 @@ class BMSGUI:
     def check_warnings(self, voltage, temperature):
         if voltage > self.voltage_threshold:
             self.voltage_warning.config(text="⚠ High Voltage!")
+            messagebox.showerror("High Voltage Alert", f"High Voltage Detected: {voltage:.2f}V exceeds threshold of {self.voltage_threshold}V!")
         else:
             self.voltage_warning.config(text="")
             
@@ -198,9 +223,18 @@ class BMSGUI:
                 self.temp_line.set_data(df['timestamp'], df['temperature'])
                 self.soc_line.set_data(df['timestamp'], df['state_of_charge'])
                 
-                for ax in [self.ax1, self.ax2]:
+                for ax in [self.ax1, self.ax2, self.ax3, self.ax4]:
                     ax.relim()
                     ax.autoscale_view()
+                
+                # Ensure threshold lines remain visible after autoscaling
+                y_min, y_max = self.ax1.get_ylim()
+                if y_max < self.voltage_threshold:
+                    self.ax1.set_ylim(y_min, self.voltage_threshold * 1.1)  # Provide some padding
+                
+                y_min, y_max = self.ax3.get_ylim()
+                if y_max < self.temp_threshold:
+                    self.ax3.set_ylim(y_min, self.temp_threshold * 1.1)  # Provide some padding
                 
                 self.canvas.draw()
         except Exception as e:
