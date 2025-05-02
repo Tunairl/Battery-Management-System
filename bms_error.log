@@ -1,1 +1,2 @@
 2025-04-13 22:37:00,120 - ERROR - Failed to connect to BMS: could not open port 'COM1': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+2025-05-02 10:56:27,835 - ERROR - Failed to connect to BMS: could not open port 'COM1': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)

@@ -5,10 +5,9 @@ import sqlite3
 import logging
 
 class BMSCommunication:
-    def __init__(self, port='COM1', baud_rate=9600):
-
-        self.port = port
-        self.baud_rate = baud_rate
+    def __init__(self):
+        self.port = 'COM1'  # Fixed COM port
+        self.baud_rate = 9600  # Fixed baud rate
         self.serial_conn = None
         self.connected = False
         
@@ -114,12 +113,6 @@ class BMSCommunication:
             
             conn.commit()
             conn.close()
-            
-            if parameter == 'baud_rate':
-                self.baud_rate = int(value)
-            elif parameter == 'com_port':
-                self.port = value
-                
             return True
         except sqlite3.Error as e:
             self.log_error(f"Failed to update configuration: {str(e)}", "ERROR")
