@@ -8,6 +8,8 @@ import sqlite3
 from bms_communication import BMSCommunication
 import threading
 import time
+import os
+from database import create_database, insert_data, get_recent_data, clear_data
 
 class BMSGUI:
     def __init__(self, root):
@@ -15,12 +17,23 @@ class BMSGUI:
         self.root.title("Battery Management System")
         self.root.geometry("1200x800")
         
+        # Ensure database directory exists
+        os.makedirs('database', exist_ok=True)
+        
+        # Initialize database
+        try:
+            create_database()
+        except Exception as e:
+            messagebox.showerror("Database Error", f"Failed to initialize database: {str(e)}")
+            self.root.destroy()
+            return
+        
         self.bms = BMSCommunication()
         self.data_collection_active = False
         
         self.voltage_threshold = 12.0
         self.temp_threshold = 30.0
-        self.cell_voltage_threshold = 12.5  # Update cell voltage threshold to 12.5V
+        self.cell_voltage_threshold = 12.5
         
         self.create_frames()
         self.create_connection_panel()
@@ -175,80 +188,81 @@ class BMSGUI:
 
     def collect_data(self):
         while self.data_collection_active:
-            if self.bms.connected:
-                data = self.bms.read_data()
-                if data:
-                    voltage = data['voltage']
-                    temperature = data['temperature']
-                    
-                    # Update total voltage display
-                    self.voltage_var.set(f"{voltage:.2f}")
-                    
-                    # Update individual cell voltage displays if available
-                    if 'cell_voltages' in data:
-                        cell_voltages = data['cell_voltages']
-                        if len(cell_voltages) >= 3:
-                            self.cell1_var.set(f"{cell_voltages[0]:.2f}")
-                            self.cell2_var.set(f"{cell_voltages[1]:.2f}")
-                            self.cell3_var.set(f"{cell_voltages[2]:.2f}")
-                    
-                    # Update temperature
-                    self.temp_var.set(f"{temperature:.2f}")
-                    
-                    # Update state of charge
-                    self.soc_var.set(f"{data['state_of_charge']:.2f}")
-                    
-                    self.check_warnings(voltage, temperature)
-                    
-                    self.update_graphs()
+            try:
+                if self.bms.connected:
+                    data = self.bms.read_data()
+                    if data:
+                        # Update displays
+                        if 'cell_voltages' in data and len(data['cell_voltages']) >= 3:
+                            self.cell1_var.set(f"{data['cell_voltages'][0]:.2f}")
+                            self.cell2_var.set(f"{data['cell_voltages'][1]:.2f}")
+                            self.cell3_var.set(f"{data['cell_voltages'][2]:.2f}")
+                            
+                            # Insert data into database
+                            try:
+                                insert_data(
+                                    data['cell_voltages'][0],
+                                    data['cell_voltages'][1],
+                                    data['cell_voltages'][2],
+                                    data['temperature'],
+                                    data['state_of_charge']
+                                )
+                            except Exception as e:
+                                print(f"Database insert error: {str(e)}")
+                        
+                        # Update temperature
+                        self.temp_var.set(f"{data['temperature']:.2f}")
+                        
+                        # Update state of charge
+                        self.soc_var.set(f"{data['state_of_charge']:.2f}")
+                        
+                        self.check_warnings(data['voltage'], data['temperature'])
+                        
+                        self.update_graphs()
+            except Exception as e:
+                print(f"Data collection error: {str(e)}")
             
             time.sleep(1)
 
     def update_graphs(self):
         try:
-            conn = sqlite3.connect('database/battery_data.db')
-
-            query = '''
-            SELECT timestamp, cell1_voltage, cell2_voltage, cell3_voltage,
-                   temperature, state_of_charge
-            FROM BatteryData 
-            WHERE timestamp >= datetime('now', '-60 seconds')
-            ORDER BY timestamp
-            '''
-            df = pd.read_sql_query(query, conn)
-            conn.close()
+            data = get_recent_data(60)
+            if not data:
+                return
+                
+            # Convert data to DataFrame
+            df = pd.DataFrame(data, columns=['timestamp', 'cell1_voltage', 'cell2_voltage', 
+                                           'cell3_voltage', 'temperature', 'state_of_charge'])
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
             
-            if not df.empty:
-                df['timestamp'] = pd.to_datetime(df['timestamp'])
-                
-                # Update individual cell voltage graphs
-                self.cell1_line.set_data(df['timestamp'], df['cell1_voltage'])
-                self.cell2_line.set_data(df['timestamp'], df['cell2_voltage'])
-                self.cell3_line.set_data(df['timestamp'], df['cell3_voltage'])
-                
-                # Update temperature graph
-                self.temp_line.set_data(df['timestamp'], df['temperature'])
-                
-                # Update SOC graph
-                self.soc_line.set_data(df['timestamp'], df['state_of_charge'])
-                
-                # Update the axis limits
-                for ax in [self.ax1, self.ax2, self.ax3]:
-                    ax.relim()
-                    ax.autoscale_view()
-                
-                # Ensure threshold lines remain visible after autoscaling
-                y_min, y_max = self.ax1.get_ylim()
-                if y_max < self.cell_voltage_threshold:
-                    self.ax1.set_ylim(y_min, self.cell_voltage_threshold * 1.1)  # Provide some padding
-                
-                y_min, y_max = self.ax2.get_ylim()
-                if y_max < self.temp_threshold:
-                    self.ax2.set_ylim(y_min, self.temp_threshold * 1.1)  # Provide some padding
-                
-                self.canvas.draw()
+            # Update individual cell voltage graphs
+            self.cell1_line.set_data(df['timestamp'], df['cell1_voltage'])
+            self.cell2_line.set_data(df['timestamp'], df['cell2_voltage'])
+            self.cell3_line.set_data(df['timestamp'], df['cell3_voltage'])
+            
+            # Update temperature graph
+            self.temp_line.set_data(df['timestamp'], df['temperature'])
+            
+            # Update SOC graph
+            self.soc_line.set_data(df['timestamp'], df['state_of_charge'])
+            
+            # Update the axis limits
+            for ax in [self.ax1, self.ax2, self.ax3]:
+                ax.relim()
+                ax.autoscale_view()
+            
+            # Ensure threshold lines remain visible after autoscaling
+            y_min, y_max = self.ax1.get_ylim()
+            if y_max < self.cell_voltage_threshold:
+                self.ax1.set_ylim(y_min, self.cell_voltage_threshold * 1.1)
+            
+            y_min, y_max = self.ax2.get_ylim()
+            if y_max < self.temp_threshold:
+                self.ax2.set_ylim(y_min, self.temp_threshold * 1.1)
+            
+            self.canvas.draw()
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to update graphs: {str(e)}")
+            print(f"Graph update error: {str(e)}")
 
     def export_data(self):
         try:
@@ -275,17 +289,18 @@ class BMSGUI:
     def clear_data(self):
         if messagebox.askyesno("Confirm", "Are you sure you want to clear all data?"):
             try:
-                conn = sqlite3.connect('database/battery_data.db')
-                cursor = conn.cursor()
-                cursor.execute("DELETE FROM BatteryData")
-                conn.commit()
-                conn.close()
+                clear_data()
                 
-                self.voltage_var.set("0.0") 
+                # Reset displays
+                self.cell1_var.set("0.0")
+                self.cell2_var.set("0.0")
+                self.cell3_var.set("0.0")
                 self.temp_var.set("0.0")
                 self.soc_var.set("0.0")
                 
-                for line in [self.cell1_line, self.cell2_line, self.cell3_line, self.temp_line, self.soc_line]:
+                # Clear graphs
+                for line in [self.cell1_line, self.cell2_line, self.cell3_line, 
+                           self.temp_line, self.soc_line]:
                     line.set_data([], [])
                 self.canvas.draw()
                 
@@ -310,6 +325,9 @@ class BMSGUI:
             self.critical_threshold = float(dialog.critical_threshold.text())
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = BMSGUI(root)
-    root.mainloop() 
+    try:
+        root = tk.Tk()
+        app = BMSGUI(root)
+        root.mainloop()
+    except Exception as e:
+        print(f"Application error: {str(e)}") 
