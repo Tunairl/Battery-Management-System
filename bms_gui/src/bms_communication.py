@@ -184,36 +184,29 @@ class BMSCommunication:
             conn = sqlite3.connect('database/battery_data.db')
             cursor = conn.cursor()
             
-            # Extract cell voltages and humidity if available
+            # Extract cell voltages
             cell1_voltage = None
             cell2_voltage = None
             cell3_voltage = None
-            humidity = None
             
             if 'cell_voltages' in data and len(data['cell_voltages']) >= 3:
                 cell1_voltage = data['cell_voltages'][0]
                 cell2_voltage = data['cell_voltages'][1]
                 cell3_voltage = data['cell_voltages'][2]
                 
-            if 'humidity' in data:
-                humidity = data['humidity']
-                
             cursor.execute('''
             INSERT INTO BatteryData (
-                timestamp, voltage, current, temperature, state_of_charge,
-                cell1_voltage, cell2_voltage, cell3_voltage, humidity
+                timestamp, cell1_voltage, cell2_voltage, cell3_voltage,
+                temperature, state_of_charge
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
             ''', (
                 datetime.now(),
-                data['voltage'],
-                data['current'],
-                data['temperature'],
-                data['state_of_charge'],
                 cell1_voltage,
                 cell2_voltage,
                 cell3_voltage,
-                humidity
+                data['temperature'],
+                data['state_of_charge']
             ))
             
             conn.commit()

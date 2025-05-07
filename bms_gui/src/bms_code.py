@@ -19,7 +19,7 @@ dhtDevice = adafruit_dht.DHT22(board.D4,  use_pulseio=False)
 while True:
     try:
         full_datetime = strftime("%d/%m/%y at %I:%M%p")
-        cell1 = (cell_1.value * 3.3) *5.7 # R1=4.7K R2=1K 5.7/1=5.7
+        cell1 = (cell_1.value * 3.3) *4.3 # R1=4.7K R2=1K 5.7/1=5.7
         cell2 = (cell_2.value * 3.3) *3.127 # R1=10K R2=4.7K 14.7/4.7=
         cell3 = (cell_3.value * 3.3) *1.47 # R1=4.7K R2=10K 14.7/10=1.47
         # Print the values to the serial port

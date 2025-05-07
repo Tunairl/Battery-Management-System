@@ -13,14 +13,11 @@ def create_database():
         CREATE TABLE IF NOT EXISTS BatteryData (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp DATETIME NOT NULL,
-            voltage REAL NOT NULL,
-            current REAL NOT NULL,
+            cell1_voltage REAL NOT NULL,
+            cell2_voltage REAL NOT NULL,
+            cell3_voltage REAL NOT NULL,
             temperature REAL NOT NULL,
-            state_of_charge REAL NOT NULL,
-            cell1_voltage REAL,
-            cell2_voltage REAL,
-            cell3_voltage REAL,
-            humidity REAL
+            state_of_charge REAL NOT NULL
         )
         ''')
 
@@ -58,8 +55,7 @@ def create_database():
             ('temperature_unit', 'celsius', datetime.now()),
             ('cell1_warning_threshold', '3.7', datetime.now()),
             ('cell2_warning_threshold', '3.7', datetime.now()),
-            ('cell3_warning_threshold', '3.7', datetime.now()),
-            ('humidity_threshold', '80.0', datetime.now())
+            ('cell3_warning_threshold', '3.7', datetime.now())
         ]
 
         cursor.executemany('''
