@@ -20,6 +20,7 @@ class BMSGUI:
         
         self.voltage_threshold = 12.0
         self.temp_threshold = 30.0
+        self.cell_voltage_threshold = 12.0  # Add cell voltage threshold
         
         self.create_frames()
         self.create_connection_panel()
@@ -57,41 +58,67 @@ class BMSGUI:
         self.voltage_warning = ttk.Label(self.display_frame, text="", foreground="red")
         self.voltage_warning.grid(row=0, column=2, padx=5, pady=5)
         
-        ttk.Label(self.display_frame, text="Temperature (°C):").grid(row=1, column=0, padx=5, pady=5)
-        self.temp_var = tk.StringVar(value="0.0")
-        ttk.Label(self.display_frame, textvariable=self.temp_var).grid(row=1, column=1, padx=5, pady=5)
-        self.temp_warning = ttk.Label(self.display_frame, text="", foreground="red")
-        self.temp_warning.grid(row=1, column=2, padx=5, pady=5)
+        # Add individual cell voltage displays
+        ttk.Label(self.display_frame, text="Cell 1 (V):").grid(row=1, column=0, padx=5, pady=5)
+        self.cell1_var = tk.StringVar(value="0.0")
+        ttk.Label(self.display_frame, textvariable=self.cell1_var).grid(row=1, column=1, padx=5, pady=5)
         
-        ttk.Label(self.display_frame, text="State of Charge (%):").grid(row=2, column=0, padx=5, pady=5)
+        ttk.Label(self.display_frame, text="Cell 2 (V):").grid(row=2, column=0, padx=5, pady=5)
+        self.cell2_var = tk.StringVar(value="0.0")
+        ttk.Label(self.display_frame, textvariable=self.cell2_var).grid(row=2, column=1, padx=5, pady=5)
+        
+        ttk.Label(self.display_frame, text="Cell 3 (V):").grid(row=3, column=0, padx=5, pady=5)
+        self.cell3_var = tk.StringVar(value="0.0")
+        ttk.Label(self.display_frame, textvariable=self.cell3_var).grid(row=3, column=1, padx=5, pady=5)
+        
+        ttk.Label(self.display_frame, text="Temperature (°C):").grid(row=4, column=0, padx=5, pady=5)
+        self.temp_var = tk.StringVar(value="0.0")
+        ttk.Label(self.display_frame, textvariable=self.temp_var).grid(row=4, column=1, padx=5, pady=5)
+        self.temp_warning = ttk.Label(self.display_frame, text="", foreground="red")
+        self.temp_warning.grid(row=4, column=2, padx=5, pady=5)
+        
+        ttk.Label(self.display_frame, text="State of Charge (%):").grid(row=5, column=0, padx=5, pady=5)
         self.soc_var = tk.StringVar(value="0.0")
-        ttk.Label(self.display_frame, textvariable=self.soc_var).grid(row=2, column=1, padx=5, pady=5)
+        ttk.Label(self.display_frame, textvariable=self.soc_var).grid(row=5, column=1, padx=5, pady=5)
 
     def create_graphs(self):
         self.fig = plt.figure(figsize=(10, 8))
         
-        # Create 2x2 grid of graphs, leaving one space empty
-        self.ax1 = self.fig.add_subplot(2, 2, 1)  # Voltage (top-left)
+        # Create a 2x2 grid of graphs
+        self.ax1 = self.fig.add_subplot(2, 2, 1)  # Total Voltage (top-left)
+        self.ax2 = self.fig.add_subplot(2, 2, 2)  # Individual Cell Voltages (top-right)
         self.ax3 = self.fig.add_subplot(2, 2, 3)  # Temperature (bottom-left)
-        self.ax4 = self.fig.add_subplot(2, 2, 4)  # SOC (bottom-right)
+        self.ax5 = self.fig.add_subplot(2, 2, 4)  # SOC (bottom-right)
         
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         
         # Create individual lines for each graph
-        self.voltage_line, = self.ax1.plot([], [], 'b-', label='Voltage')
+        self.voltage_line, = self.ax1.plot([], [], 'b-', label='Total Voltage')
+        
+        # Cell voltage lines
+        self.cell1_line, = self.ax2.plot([], [], 'r-', label='Cell 1')
+        self.cell2_line, = self.ax2.plot([], [], 'g-', label='Cell 2')
+        self.cell3_line, = self.ax2.plot([], [], 'b-', label='Cell 3')
+        
         self.temp_line, = self.ax3.plot([], [], 'r-', label='Temperature')
-        self.soc_line, = self.ax4.plot([], [], 'm-', label='SOC')
+        self.soc_line, = self.ax5.plot([], [], 'm-', label='SOC')
         
         # Add threshold lines
         self.voltage_threshold_line = self.ax1.axhline(y=self.voltage_threshold, color='red', linestyle='--', linewidth=2, label=f'Threshold ({self.voltage_threshold}V)')
+        self.cell_voltage_threshold_line = self.ax2.axhline(y=self.cell_voltage_threshold, color='red', linestyle='--', linewidth=2, label=f'Threshold ({self.cell_voltage_threshold}V)')
         self.temp_threshold_line = self.ax3.axhline(y=self.temp_threshold, color='red', linestyle='--', linewidth=2, label=f'Threshold ({self.temp_threshold}°C)')
         
         # Configure each graph
-        self.ax1.set_title('Voltage (V)')
+        self.ax1.set_title('Total Voltage (V)')
         self.ax1.set_ylabel('Voltage')
         self.ax1.legend(loc='upper right')
         self.ax1.grid(True)
+        
+        self.ax2.set_title('Cell Voltages (V)')
+        self.ax2.set_ylabel('Voltage')
+        self.ax2.legend(loc='upper right')
+        self.ax2.grid(True)
         
         self.ax3.set_title('Temperature (°C)')
         self.ax3.set_xlabel('Time')
@@ -99,11 +126,11 @@ class BMSGUI:
         self.ax3.legend(loc='upper right')
         self.ax3.grid(True)
         
-        self.ax4.set_title('State of Charge (%)')
-        self.ax4.set_xlabel('Time')
-        self.ax4.set_ylabel('SOC')
-        self.ax4.legend(loc='upper right')
-        self.ax4.grid(True)
+        self.ax5.set_title('State of Charge (%)')
+        self.ax5.set_xlabel('Time')
+        self.ax5.set_ylabel('SOC')
+        self.ax5.legend(loc='upper right')
+        self.ax5.grid(True)
         
         self.fig.tight_layout()
 
@@ -164,8 +191,21 @@ class BMSGUI:
                     voltage = data['voltage']
                     temperature = data['temperature']
                     
+                    # Update total voltage display
                     self.voltage_var.set(f"{voltage:.2f}")
+                    
+                    # Update individual cell voltage displays if available
+                    if 'cell_voltages' in data:
+                        cell_voltages = data['cell_voltages']
+                        if len(cell_voltages) >= 3:
+                            self.cell1_var.set(f"{cell_voltages[0]:.2f}")
+                            self.cell2_var.set(f"{cell_voltages[1]:.2f}")
+                            self.cell3_var.set(f"{cell_voltages[2]:.2f}")
+                    
+                    # Update temperature
                     self.temp_var.set(f"{temperature:.2f}")
+                    
+                    # Update state of charge
                     self.soc_var.set(f"{data['state_of_charge']:.2f}")
                     
                     self.check_warnings(voltage, temperature)
@@ -179,7 +219,8 @@ class BMSGUI:
             conn = sqlite3.connect('database/battery_data.db')
 
             query = '''
-            SELECT timestamp, voltage, current, temperature, state_of_charge 
+            SELECT timestamp, voltage, current, temperature, state_of_charge,
+                   cell1_voltage, cell2_voltage, cell3_voltage, humidity
             FROM BatteryData 
             WHERE timestamp >= datetime('now', '-60 seconds')
             ORDER BY timestamp
@@ -190,11 +231,39 @@ class BMSGUI:
             if not df.empty:
                 df['timestamp'] = pd.to_datetime(df['timestamp'])
                 
+                # Update total voltage graph
                 self.voltage_line.set_data(df['timestamp'], df['voltage'])
+                
+                # Update individual cell voltage graphs if there are valid values
+                if 'cell1_voltage' in df.columns and not df['cell1_voltage'].isna().all():
+                    self.cell1_line.set_data(df['timestamp'], df['cell1_voltage'])
+                    self.cell2_line.set_data(df['timestamp'], df['cell2_voltage'])
+                    self.cell3_line.set_data(df['timestamp'], df['cell3_voltage'])
+                else:
+                    # If no database values, try to get current values from BMS
+                    data = self.bms.read_data()
+                    if data and 'cell_voltages' in data:
+                        cell_voltages = data['cell_voltages']
+                        if len(cell_voltages) >= 3:
+                            current_time = pd.to_datetime(datetime.now())
+                            time_points = [current_time - timedelta(seconds=i) for i in reversed(range(10))]
+                            
+                            cell1_values = [cell_voltages[0]] * 10
+                            cell2_values = [cell_voltages[1]] * 10
+                            cell3_values = [cell_voltages[2]] * 10
+                            
+                            self.cell1_line.set_data(time_points, cell1_values)
+                            self.cell2_line.set_data(time_points, cell2_values)
+                            self.cell3_line.set_data(time_points, cell3_values)
+                
+                # Update temperature graph
                 self.temp_line.set_data(df['timestamp'], df['temperature'])
+                
+                # Update SOC graph
                 self.soc_line.set_data(df['timestamp'], df['state_of_charge'])
                 
-                for ax in [self.ax1, self.ax3, self.ax4]:
+                # Update the axis limits
+                for ax in [self.ax1, self.ax2, self.ax3, self.ax5]:
                     ax.relim()
                     ax.autoscale_view()
                 
@@ -202,6 +271,10 @@ class BMSGUI:
                 y_min, y_max = self.ax1.get_ylim()
                 if y_max < self.voltage_threshold:
                     self.ax1.set_ylim(y_min, self.voltage_threshold * 1.1)  # Provide some padding
+                
+                y_min, y_max = self.ax2.get_ylim()
+                if y_max < self.cell_voltage_threshold:
+                    self.ax2.set_ylim(y_min, self.cell_voltage_threshold * 1.1)  # Provide some padding
                 
                 y_min, y_max = self.ax3.get_ylim()
                 if y_max < self.temp_threshold:
