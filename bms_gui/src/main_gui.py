@@ -209,7 +209,7 @@ class BMSGUI:
             conn = sqlite3.connect('database/battery_data.db')
 
             query = '''
-            SELECT timestamp, cell1_voltage, cell2_voltage, cell3_voltage,
+            SELECT timestamp, cell1_voltage, cell2_voltage, cell3_voltage, 
                    temperature, state_of_charge
             FROM BatteryData 
             WHERE timestamp >= datetime('now', '-60 seconds')
@@ -221,27 +221,10 @@ class BMSGUI:
             if not df.empty:
                 df['timestamp'] = pd.to_datetime(df['timestamp'])
                 
-                # Update individual cell voltage graphs if there are valid values
-                if 'cell1_voltage' in df.columns and not df['cell1_voltage'].isna().all():
-                    self.cell1_line.set_data(df['timestamp'], df['cell1_voltage'])
-                    self.cell2_line.set_data(df['timestamp'], df['cell2_voltage'])
-                    self.cell3_line.set_data(df['timestamp'], df['cell3_voltage'])
-                else:
-                    # If no database values, try to get current values from BMS
-                    data = self.bms.read_data()
-                    if data and 'cell_voltages' in data:
-                        cell_voltages = data['cell_voltages']
-                        if len(cell_voltages) >= 3:
-                            current_time = pd.to_datetime(datetime.now())
-                            time_points = [current_time - timedelta(seconds=i) for i in reversed(range(10))]
-                            
-                            cell1_values = [cell_voltages[0]] * 10
-                            cell2_values = [cell_voltages[1]] * 10
-                            cell3_values = [cell_voltages[2]] * 10
-                            
-                            self.cell1_line.set_data(time_points, cell1_values)
-                            self.cell2_line.set_data(time_points, cell2_values)
-                            self.cell3_line.set_data(time_points, cell3_values)
+                # Update individual cell voltage graphs
+                self.cell1_line.set_data(df['timestamp'], df['cell1_voltage'])
+                self.cell2_line.set_data(df['timestamp'], df['cell2_voltage'])
+                self.cell3_line.set_data(df['timestamp'], df['cell3_voltage'])
                 
                 # Update temperature graph
                 self.temp_line.set_data(df['timestamp'], df['temperature'])
