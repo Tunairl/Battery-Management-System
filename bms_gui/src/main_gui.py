@@ -31,9 +31,8 @@ class BMSGUI:
         self.bms = BMSCommunication()
         self.data_collection_active = False
         
-        self.voltage_threshold = 12.0
-        self.temp_threshold = 30.0
-        self.cell_voltage_threshold = 12.5
+        self.temp_threshold = 40.0     # Temperature threshold
+        self.cell_voltage_threshold = 20.0  # Cell voltage threshold
         
         self.create_frames()
         self.create_connection_panel()
@@ -170,21 +169,12 @@ class BMSGUI:
             self.data_collection_active = False
             self.start_button.configure(text="Start Monitoring")
 
-    def check_warnings(self, voltage, temperature):
-        if voltage > self.voltage_threshold:
-            self.voltage_warning.config(text="⚠ High Voltage!")
-            messagebox.showerror("High Voltage Alert", f"High Voltage Detected: {voltage:.2f}V exceeds threshold of {self.voltage_threshold}V!")
-        else:
-            self.voltage_warning.config(text="")
-            
+    def check_warnings(self, temperature):
         if temperature > self.temp_threshold:
             self.temp_warning.config(text="⚠ High Temperature!")
+            messagebox.showerror("High Temperature Alert", f"High Temperature Detected: {temperature:.2f}°C exceeds threshold of {self.temp_threshold}°C!")
         else:
             self.temp_warning.config(text="")
-            
-        if voltage > self.voltage_threshold and temperature > self.temp_threshold:
-            messagebox.showwarning("Warning", 
-                f"Critical Condition!\nVoltage: {voltage:.2f}V (Threshold: {self.voltage_threshold}V)\nTemperature: {temperature:.2f}°C (Threshold: {self.temp_threshold}°C)")
 
     def collect_data(self):
         while self.data_collection_active:
@@ -216,7 +206,7 @@ class BMSGUI:
                         # Update state of charge
                         self.soc_var.set(f"{data['state_of_charge']:.2f}")
                         
-                        self.check_warnings(data['voltage'], data['temperature'])
+                        self.check_warnings(data['temperature'])
                         
                         self.update_graphs()
             except Exception as e:

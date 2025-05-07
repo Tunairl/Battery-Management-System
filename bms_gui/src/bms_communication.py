@@ -33,11 +33,11 @@ class BMSCommunication:
         
         # Initialize data storage
         self.cell_values = [0.0, 0.0, 0.0]
-        self.temperature = 25.0  # Default room temperature
-        self.humidity = 50.0     # Default humidity
-        self.total_voltage = 12.0  # Default voltage
-        self.current = 1.0       # Default current
-        self.state_of_charge = 80.0  # Default SOC
+        self.temperature = 0.0
+        self.humidity = 0.0
+        self.total_voltage = 0.0
+        self.current = 0.0
+        self.state_of_charge = 0.0
         
         # Setup logging
         os.makedirs('logs', exist_ok=True)
@@ -68,14 +68,8 @@ class BMSCommunication:
                 self.log_error("Direct Raspberry Pi hardware connection established", "INFO")
                 return True
             else:
-                # For non-Raspberry Pi, use mock data
-                self.connected = True
-                self.is_running = True
-                self.data_thread = threading.Thread(target=self._generate_mock_data)
-                self.data_thread.daemon = True
-                self.data_thread.start()
-                self.log_error("Mock data connection established", "INFO")
-                return True
+                self.log_error("Hardware not available", "ERROR")
+                return False
         except Exception as e:
             self.log_error(f"Failed to connect to BMS: {str(e)}", "ERROR")
             return False
@@ -86,25 +80,6 @@ class BMSCommunication:
             self.data_thread.join(timeout=2.0)
         self.connected = False
         self.log_error("BMS Connection closed", "INFO")
-
-    def _generate_mock_data(self):
-        """Generate mock data for testing without hardware"""
-        while self.is_running:
-            try:
-                # Generate some realistic-looking mock data
-                self.cell_values = [
-                    4.0 + (time.time() % 10) * 0.1,  # Cell 1: 4.0-5.0V
-                    4.0 + (time.time() % 8) * 0.1,   # Cell 2: 4.0-4.8V
-                    4.0 + (time.time() % 12) * 0.1   # Cell 3: 4.0-5.2V
-                ]
-                self.total_voltage = sum(self.cell_values)
-                self.temperature = 25.0 + (time.time() % 20) * 0.5  # 25-35°C
-                self.state_of_charge = 80.0 + (time.time() % 40) * 0.5  # 80-100%
-                
-                time.sleep(2.0)
-            except Exception as e:
-                self.log_error(f"Error generating mock data: {str(e)}", "ERROR")
-                time.sleep(2.0)
 
     def _read_raspberry_pi_data(self):
         """Thread function to continuously read data from Raspberry Pi sensors"""
