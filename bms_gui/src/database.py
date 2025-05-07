@@ -5,28 +5,35 @@ def create_database():
     conn = sqlite3.connect('database/battery_data.db')
     cursor = conn.cursor()
     
-    # Create BatteryData table with only the fields we need for our graphs
+    # Drop existing tables if they exist
+    cursor.execute('DROP TABLE IF EXISTS BatteryData')
+    cursor.execute('DROP TABLE IF EXISTS ExportLogs')
+    
+    # Create BatteryData table with only the necessary fields
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS BatteryData (
+    CREATE TABLE BatteryData (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        cell1_voltage REAL,
-        cell2_voltage REAL,
-        cell3_voltage REAL,
-        temperature REAL,
-        state_of_charge REAL
+        timestamp DATETIME NOT NULL,
+        cell1_voltage REAL NOT NULL,
+        cell2_voltage REAL NOT NULL,
+        cell3_voltage REAL NOT NULL,
+        temperature REAL NOT NULL,
+        state_of_charge REAL NOT NULL
     )
     ''')
     
     # Create ExportLogs table for tracking data exports
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS ExportLogs (
+    CREATE TABLE ExportLogs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        file_path TEXT,
-        export_format TEXT
+        timestamp DATETIME NOT NULL,
+        file_path TEXT NOT NULL,
+        export_format TEXT NOT NULL
     )
     ''')
+    
+    # Create indexes for better query performance
+    cursor.execute('CREATE INDEX idx_timestamp ON BatteryData(timestamp)')
     
     conn.commit()
     conn.close()
@@ -36,14 +43,11 @@ def insert_data(cell1_voltage, cell2_voltage, cell3_voltage, temperature, state_
     cursor = conn.cursor()
     
     cursor.execute('''
-    INSERT INTO BatteryData (
-        cell1_voltage,
-        cell2_voltage,
-        cell3_voltage,
-        temperature,
-        state_of_charge
-    ) VALUES (?, ?, ?, ?, ?)
-    ''', (cell1_voltage, cell2_voltage, cell3_voltage, temperature, state_of_charge))
+    INSERT INTO BatteryData (timestamp, cell1_voltage, cell2_voltage, cell3_voltage, 
+                           temperature, state_of_charge)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ''', (datetime.now(), cell1_voltage, cell2_voltage, cell3_voltage, 
+          temperature, state_of_charge))
     
     conn.commit()
     conn.close()
@@ -53,7 +57,7 @@ def get_recent_data(seconds=60):
     cursor = conn.cursor()
     
     cursor.execute('''
-    SELECT timestamp, cell1_voltage, cell2_voltage, cell3_voltage, 
+    SELECT timestamp, cell1_voltage, cell2_voltage, cell3_voltage,
            temperature, state_of_charge
     FROM BatteryData 
     WHERE timestamp >= datetime('now', ? || ' seconds')
@@ -64,12 +68,10 @@ def get_recent_data(seconds=60):
     conn.close()
     return data
 
-def clear_all_data():
+def clear_data():
     conn = sqlite3.connect('database/battery_data.db')
     cursor = conn.cursor()
-    
     cursor.execute('DELETE FROM BatteryData')
-    
     conn.commit()
     conn.close()
 

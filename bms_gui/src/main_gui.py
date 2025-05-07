@@ -209,7 +209,7 @@ class BMSGUI:
             conn = sqlite3.connect('database/battery_data.db')
 
             query = '''
-            SELECT timestamp, cell1_voltage, cell2_voltage, cell3_voltage, 
+            SELECT timestamp, cell1_voltage, cell2_voltage, cell3_voltage,
                    temperature, state_of_charge
             FROM BatteryData 
             WHERE timestamp >= datetime('now', '-60 seconds')
