@@ -6,6 +6,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+from matplotlib.dates import DateFormatter
 import pandas as pd
 from datetime import datetime, timedelta
 import sqlite3
@@ -17,6 +18,7 @@ import sys
 from database import create_database, insert_data, get_recent_data, clear_data, verify_database, get_db_path
 import queue
 import traceback
+import numpy as np
 
 class BMSGUI:
     def __init__(self, root):
@@ -38,6 +40,14 @@ class BMSGUI:
             
             # Create locks for thread safety
             self.graph_lock = threading.Lock()
+            
+            # Initialize plot data
+            self.timestamps = []
+            self.cell1_data = []
+            self.cell2_data = []
+            self.cell3_data = []
+            self.temp_data = []
+            self.soc_data = []
             
             # Create database directory and initialize database
             try:
@@ -181,59 +191,57 @@ class BMSGUI:
 
     def create_graphs(self):
         try:
-            # Create figure using Figure instead of plt.figure
-            self.fig = Figure(figsize=(10, 8))
+            # Create figure with tight layout
+            self.fig = Figure(figsize=(10, 8), constrained_layout=True)
             
-            # Create a 2x2 grid of graphs
-            self.ax1 = self.fig.add_subplot(2, 2, 1)  # Cell Voltages (top-left)
-            self.ax2 = self.fig.add_subplot(2, 2, 2)  # Temperature (top-right)
-            self.ax3 = self.fig.add_subplot(2, 2, 3)  # SOC (bottom-left)
+            # Create subplots
+            self.ax1 = self.fig.add_subplot(221)  # Cell Voltages
+            self.ax2 = self.fig.add_subplot(222)  # Temperature
+            self.ax3 = self.fig.add_subplot(223)  # State of Charge
             
-            # Create canvas first
+            # Create canvas
             self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
             self.canvas_widget = self.canvas.get_tk_widget()
             self.canvas_widget.pack(fill=tk.BOTH, expand=True)
             
-            # Cell voltage lines
+            # Initialize empty lines
             self.cell1_line, = self.ax1.plot([], [], 'r-', label='Cell 1')
             self.cell2_line, = self.ax1.plot([], [], 'g-', label='Cell 2')
             self.cell3_line, = self.ax1.plot([], [], 'b-', label='Cell 3')
-            
             self.temp_line, = self.ax2.plot([], [], 'r-', label='Temperature')
-            self.soc_line, = self.ax3.plot([], [], 'm-', label='SOC')
+            self.soc_line, = self.ax3.plot([], [], 'g-', label='SOC')
             
-            # Add threshold lines
-            self.cell_voltage_threshold_line = self.ax1.axhline(y=self.cell_voltage_threshold, color='red', linestyle='--', linewidth=2, label=f'Threshold ({self.cell_voltage_threshold}V)')
-            self.temp_threshold_line = self.ax2.axhline(y=self.temp_threshold, color='red', linestyle='--', linewidth=2, label=f'Threshold ({self.temp_threshold}°C)')
-            
-            # Configure each graph
-            self.ax1.set_title('Cell Voltages (V)')
-            self.ax1.set_ylabel('Voltage')
-            self.ax1.legend(loc='upper right')
+            # Configure axes
+            self.ax1.set_title('Cell Voltages')
+            self.ax1.set_xlabel('Time')
+            self.ax1.set_ylabel('Voltage (V)')
             self.ax1.grid(True)
+            self.ax1.legend()
             
-            self.ax2.set_title('Temperature (°C)')
-            self.ax2.set_ylabel('Temperature')
-            self.ax2.legend(loc='upper right')
+            self.ax2.set_title('Temperature')
+            self.ax2.set_xlabel('Time')
+            self.ax2.set_ylabel('Temperature (°C)')
             self.ax2.grid(True)
+            self.ax2.legend()
             
-            self.ax3.set_title('State of Charge (%)')
-            self.ax3.set_ylabel('SOC')
-            self.ax3.legend(loc='upper right')
+            self.ax3.set_title('State of Charge')
+            self.ax3.set_xlabel('Time')
+            self.ax3.set_ylabel('SOC (%)')
             self.ax3.grid(True)
+            self.ax3.legend()
             
-            # Format the x-axis to display time properly
+            # Set date formatter for x-axis
+            date_fmt = DateFormatter('%H:%M:%S')
             for ax in [self.ax1, self.ax2, self.ax3]:
-                ax.set_xlabel('Time')
+                ax.xaxis.set_major_formatter(date_fmt)
                 ax.tick_params(axis='x', rotation=45)
-            
-            self.fig.tight_layout()
             
             # Initial draw
             self.canvas.draw()
             
         except Exception as e:
-            messagebox.showerror("UI Error", f"Failed to create graphs: {str(e)}")
+            print(f"Error creating graphs: {e}")
+            traceback.print_exc()
             raise
 
     def create_control_panel(self):
@@ -337,45 +345,30 @@ class BMSGUI:
             # Get recent data
             data = get_recent_data(60)  # Get last minute of data
             if not data:
+                self.graph_lock.release()
                 return
                 
-            # Convert data to pandas DataFrame
-            df = pd.DataFrame(data, columns=['timestamp', 'cell1_voltage', 'cell2_voltage', 
-                                           'cell3_voltage', 'temperature', 'state_of_charge'])
-            df['timestamp'] = pd.to_datetime(df['timestamp'])
+            # Convert data to numpy arrays for better performance
+            timestamps = pd.to_datetime([row[0] for row in data])
+            cell1_data = np.array([row[1] for row in data])
+            cell2_data = np.array([row[2] for row in data])
+            cell3_data = np.array([row[3] for row in data])
+            temp_data = np.array([row[4] for row in data])
+            soc_data = np.array([row[5] for row in data])
             
-            # Clear previous plots
-            for ax in [self.ax1, self.ax2, self.ax3, self.ax4]:
-                ax.clear()
+            # Update line data
+            self.cell1_line.set_data(timestamps, cell1_data)
+            self.cell2_line.set_data(timestamps, cell2_data)
+            self.cell3_line.set_data(timestamps, cell3_data)
+            self.temp_line.set_data(timestamps, temp_data)
+            self.soc_line.set_data(timestamps, soc_data)
             
-            # Plot cell voltages
-            self.ax1.plot(df['timestamp'], df['cell1_voltage'], label='Cell 1')
-            self.ax1.plot(df['timestamp'], df['cell2_voltage'], label='Cell 2')
-            self.ax1.plot(df['timestamp'], df['cell3_voltage'], label='Cell 3')
-            self.ax1.set_title('Cell Voltages')
-            self.ax1.set_xlabel('Time')
-            self.ax1.set_ylabel('Voltage (V)')
-            self.ax1.legend()
-            self.ax1.grid(True)
+            # Update axis limits
+            for ax in [self.ax1, self.ax2, self.ax3]:
+                ax.relim()
+                ax.autoscale_view()
             
-            # Plot temperature
-            self.ax2.plot(df['timestamp'], df['temperature'], 'r-', label='Temperature')
-            self.ax2.set_title('Temperature')
-            self.ax2.set_xlabel('Time')
-            self.ax2.set_ylabel('Temperature (°C)')
-            self.ax2.legend()
-            self.ax2.grid(True)
-            
-            # Plot state of charge
-            self.ax3.plot(df['timestamp'], df['state_of_charge'], 'g-', label='SOC')
-            self.ax3.set_title('State of Charge')
-            self.ax3.set_xlabel('Time')
-            self.ax3.set_ylabel('SOC (%)')
-            self.ax3.legend()
-            self.ax3.grid(True)
-            
-            # Adjust layout and draw
-            self.fig.tight_layout()
+            # Draw canvas
             self.canvas.draw_idle()
             
         except Exception as e:
