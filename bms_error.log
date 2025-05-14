@@ -10,3 +10,9 @@
 2025-05-14 04:46:58,395 - ERROR - Hardware not available
 2025-05-14 04:50:06,862 - INFO - === BMS Application Starting ===
 2025-05-14 04:50:16,971 - ERROR - Hardware not available
+2025-05-14 10:31:58,885 - INFO - === BMS Application Starting ===
+2025-05-14 10:32:02,938 - INFO - Using simulated data for testing
+2025-05-14 10:32:35,968 - INFO - BMS Connection closed
+2025-05-14 10:35:22,218 - INFO - === BMS Application Starting ===
+2025-05-14 10:35:24,877 - INFO - Using simulated data for testing
+2025-05-14 10:36:01,901 - INFO - BMS Connection closed
