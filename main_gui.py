@@ -8,6 +8,8 @@ import sqlite3
 from bms_communication import BMSCommunication
 import threading
 import time
+import os
+import matplotlib.dates
 
 class BMSGUI:
     def __init__(self, root):
@@ -21,6 +23,9 @@ class BMSGUI:
         self.voltage_threshold = 12.0
         self.temp_threshold = 30.0
         
+        # Initialize database
+        self.init_database()
+        
         self.create_frames()
         self.create_connection_panel()
         self.create_real_time_display()
@@ -28,6 +33,43 @@ class BMSGUI:
         self.create_control_panel()
         
         self.collection_thread = None
+
+    def init_database(self):
+        try:
+            # Make sure the database directory exists
+            os.makedirs('database', exist_ok=True)
+            
+            # Create/connect to the database
+            conn = sqlite3.connect('database/battery_data.db')
+            cursor = conn.cursor()
+            
+            # Create the BatteryData table if it doesn't exist
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS BatteryData (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp DATETIME NOT NULL,
+                cell1_voltage REAL NOT NULL,
+                cell2_voltage REAL NOT NULL,
+                cell3_voltage REAL NOT NULL,
+                temperature REAL NOT NULL,
+                state_of_charge REAL NOT NULL
+            )
+            ''')
+            
+            # Create the ExportLogs table if it doesn't exist
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS ExportLogs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp DATETIME NOT NULL,
+                file_path TEXT NOT NULL,
+                export_format TEXT NOT NULL
+            )
+            ''')
+            
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            messagebox.showerror("Database Error", f"Failed to initialize database: {str(e)}")
 
     def create_frames(self):
 
@@ -95,6 +137,14 @@ class BMSGUI:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         
+        # Set up the time formatter for x-axis
+        time_fmt = matplotlib.dates.DateFormatter('%H:%M:%S')
+        
+        # Configure each graph with proper time formatting
+        for ax in [self.ax1, self.ax2, self.ax3, self.ax4]:
+            ax.xaxis.set_major_formatter(time_fmt)
+            plt.setp(ax.xaxis.get_majorticklabels(), rotation=45)
+        
         # Create individual lines for each graph
         self.voltage_line, = self.ax1.plot([], [], 'b-', label='Voltage')
         self.current_line, = self.ax2.plot([], [], 'g-', label='Current')
@@ -129,6 +179,9 @@ class BMSGUI:
         self.ax4.grid(True)
         
         self.fig.tight_layout()
+        
+        # Initialize with some empty data
+        self.update_graphs()
 
     def create_control_panel(self):
 
@@ -190,13 +243,34 @@ class BMSGUI:
                 if data:
                     voltage = data['voltage']
                     temperature = data['temperature']
+                    current = data['current']
+                    state_of_charge = data['state_of_charge']
+                    cell_voltages = data.get('cell_voltages', [0, 0, 0])
                     
+                    # Ensure we have 3 cell voltages
+                    while len(cell_voltages) < 3:
+                        cell_voltages.append(0.0)
+                    
+                    # Update UI display
                     self.voltage_var.set(f"{voltage:.2f}")
-                    self.current_var.set(f"{data['current']:.2f}")
+                    self.current_var.set(f"{current:.2f}")
                     self.temp_var.set(f"{temperature:.2f}")
-                    self.soc_var.set(f"{data['state_of_charge']:.2f}")
+                    self.soc_var.set(f"{state_of_charge:.2f}")
                     
                     self.check_warnings(voltage, temperature)
+                    
+                    # Insert data into database
+                    try:
+                        conn = sqlite3.connect('database/battery_data.db')
+                        cursor = conn.cursor()
+                        cursor.execute('''
+                        INSERT INTO BatteryData (timestamp, cell1_voltage, cell2_voltage, cell3_voltage, temperature, state_of_charge)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        ''', (datetime.now(), cell_voltages[0], cell_voltages[1], cell_voltages[2], temperature, state_of_charge))
+                        conn.commit()
+                        conn.close()
+                    except Exception as e:
+                        print(f"Failed to insert data into database: {str(e)}")
                     
                     self.update_graphs()
             
@@ -207,7 +281,7 @@ class BMSGUI:
             conn = sqlite3.connect('database/battery_data.db')
 
             query = '''
-            SELECT timestamp, voltage, current, temperature, state_of_charge 
+            SELECT timestamp, cell1_voltage, cell2_voltage, cell3_voltage, temperature, state_of_charge 
             FROM BatteryData 
             WHERE timestamp >= datetime('now', '-60 seconds')
             ORDER BY timestamp
@@ -216,16 +290,38 @@ class BMSGUI:
             conn.close()
             
             if not df.empty:
+                # Convert timestamps to datetime objects
                 df['timestamp'] = pd.to_datetime(df['timestamp'])
                 
-                self.voltage_line.set_data(df['timestamp'], df['voltage'])
-                self.current_line.set_data(df['timestamp'], df['current'])
-                self.temp_line.set_data(df['timestamp'], df['temperature'])
-                self.soc_line.set_data(df['timestamp'], df['state_of_charge'])
+                # Calculate total voltage as sum of cell voltages
+                df['total_voltage'] = df['cell1_voltage'] + df['cell2_voltage'] + df['cell3_voltage']
                 
+                # Convert to matplotlib date format
+                times = matplotlib.dates.date2num(df['timestamp'].tolist())
+                
+                # Update data
+                self.voltage_line.set_xdata(times)
+                self.voltage_line.set_ydata(df['total_voltage'])  # Use total voltage
+                
+                # For current, we'll use cell1_voltage as a placeholder since we don't store current
+                self.current_line.set_xdata(times)
+                self.current_line.set_ydata(df['cell1_voltage'])  # Use cell1 as a proxy for current
+                
+                self.temp_line.set_xdata(times)
+                self.temp_line.set_ydata(df['temperature'])
+                
+                self.soc_line.set_xdata(times)
+                self.soc_line.set_ydata(df['state_of_charge'])
+                
+                # Update axis limits - only y-axis to maintain consistent time scale
                 for ax in [self.ax1, self.ax2, self.ax3, self.ax4]:
+                    # Set fixed x-axis limits for the last 60 seconds
+                    now = matplotlib.dates.date2num(datetime.now())
+                    ax.set_xlim(now - (60/86400), now)  # Convert 60 seconds to days for matplotlib dates
+                    
+                    # Auto-scale only the y-axis
                     ax.relim()
-                    ax.autoscale_view()
+                    ax.autoscale_view(scalex=False, scaley=True)
                 
                 # Ensure threshold lines remain visible after autoscaling
                 y_min, y_max = self.ax1.get_ylim()
@@ -235,16 +331,42 @@ class BMSGUI:
                 y_min, y_max = self.ax3.get_ylim()
                 if y_max < self.temp_threshold:
                     self.ax3.set_ylim(y_min, self.temp_threshold * 1.1)  # Provide some padding
+            else:
+                # If no data, set up empty plots with reasonable limits
+                now = matplotlib.dates.date2num(datetime.now())
+                for ax in [self.ax1, self.ax2, self.ax3, self.ax4]:
+                    ax.set_xlim(now - (60/86400), now)  # 60 seconds window
                 
-                self.canvas.draw()
+                # Set reasonable y limits based on the expected data ranges
+                self.ax1.set_ylim(0, 20)  # Voltage range
+                self.ax2.set_ylim(0, 10)   # Current range
+                self.ax3.set_ylim(0, 40)   # Temperature range
+                self.ax4.set_ylim(0, 100)  # SOC range (percentage)
+            
+            # Redraw the canvas
+            self.fig.tight_layout()
+            self.canvas.draw()
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to update graphs: {str(e)}")
+            print(f"Failed to update graphs: {str(e)}")
+            # messagebox.showerror("Error", f"Failed to update graphs: {str(e)}")
 
     def export_data(self):
         try:
             conn = sqlite3.connect('database/battery_data.db')
-            df = pd.read_sql_query("SELECT * FROM BatteryData", conn)
+            query = "SELECT * FROM BatteryData"
+            df = pd.read_sql_query(query, conn)
             conn.close()
+            
+            if df.empty:
+                messagebox.showinfo("Info", "No data to export")
+                return
+            
+            # Calculate total voltage for export
+            df['total_voltage'] = df['cell1_voltage'] + df['cell2_voltage'] + df['cell3_voltage']
+            
+            # Reorder columns for a cleaner export
+            df = df[['id', 'timestamp', 'total_voltage', 'cell1_voltage', 'cell2_voltage', 'cell3_voltage', 
+                    'temperature', 'state_of_charge']]
             
             filename = f"bms_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
             df.to_csv(filename, index=False)

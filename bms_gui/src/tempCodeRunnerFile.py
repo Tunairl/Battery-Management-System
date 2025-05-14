@@ -1,2 +1,1 @@
-
-import sys
+os.makedirs('database', exist_ok=True)
