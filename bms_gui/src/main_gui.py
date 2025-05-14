@@ -14,8 +14,9 @@ import threading
 import time
 import os
 import sys
-from database import create_database, insert_data, get_recent_data, clear_data, verify_database
+from database import create_database, insert_data, get_recent_data, clear_data, verify_database, get_db_path
 import queue
+import traceback
 
 class BMSGUI:
     def __init__(self, root):
@@ -33,6 +34,10 @@ class BMSGUI:
             
             # Create update queue for thread-safe updates
             self.update_queue = queue.Queue()
+            self.graph_update_queue = queue.Queue()
+            
+            # Create locks for thread safety
+            self.graph_lock = threading.Lock()
             
             # Create database directory and initialize database
             try:
@@ -53,6 +58,9 @@ class BMSGUI:
                 self.root.destroy()
                 return
             
+            # Start update processing
+            self.process_updates()
+            
             # Create UI elements
             self.create_frames()
             self.create_connection_panel()
@@ -60,33 +68,43 @@ class BMSGUI:
             self.create_graphs()
             self.create_control_panel()
             
-            # Start update checker
-            self.check_for_updates()
+            # Schedule periodic graph updates
+            self.schedule_graph_update()
             
         except Exception as e:
             messagebox.showerror("Initialization Error", f"Failed to initialize application: {str(e)}")
             self.root.destroy()
             return
 
-    def check_for_updates(self):
-        """Check for queued updates and apply them"""
+    def schedule_graph_update(self):
+        """Schedule periodic graph updates"""
         try:
-            while True:
-                try:
-                    # Non-blocking queue check
-                    update_func = self.update_queue.get_nowait()
-                    update_func()
-                except queue.Empty:
-                    break
+            if not self.graph_update_queue.empty():
+                self.update_graphs()
+            self.root.after(1000, self.schedule_graph_update)  # Schedule next update
         except Exception as e:
-            print(f"Error processing updates: {str(e)}")
-        
-        # Schedule next check
-        self.root.after(100, self.check_for_updates)
+            print(f"Error scheduling graph update: {e}")
+            traceback.print_exc()
 
-    def queue_update(self, update_func):
-        """Queue an update function to be executed in the main thread"""
-        self.update_queue.put(update_func)
+    def process_updates(self):
+        """Process queued updates in the main thread"""
+        try:
+            while not self.update_queue.empty():
+                update_func = self.update_queue.get_nowait()
+                update_func()
+        except Exception as e:
+            print(f"Error processing updates: {e}")
+            traceback.print_exc()
+        finally:
+            self.root.after(100, self.process_updates)
+
+    def queue_update(self, func):
+        """Queue a function to be executed in the main thread"""
+        self.update_queue.put(func)
+
+    def queue_graph_update(self):
+        """Queue a graph update"""
+        self.graph_update_queue.put(True)
 
     def update_display_values(self, data):
         """Update display values in a thread-safe way"""
@@ -275,32 +293,15 @@ class BMSGUI:
             print(f"Warning check error: {str(e)}")
 
     def collect_data(self):
+        """Collect data from BMS in a separate thread"""
         print("\nStarting data collection...")
-        last_data_time = None
-        records_collected = 0
-        
         while self.data_collection_active:
             try:
                 if self.bms and self.bms.connected:
                     data = self.bms.read_data()
                     if data:
-                        current_time = datetime.now()
-                        
-                        # Print data collection rate
-                        if last_data_time:
-                            time_diff = (current_time - last_data_time).total_seconds()
-                            print(f"\nData collection rate: {1/time_diff:.2f} Hz")
-                        last_data_time = current_time
-                        
-                        # Print collected values
-                        print(f"Collected values - Cell1: {data['cell_voltages'][0]:.2f}V, "
-                              f"Cell2: {data['cell_voltages'][1]:.2f}V, "
-                              f"Cell3: {data['cell_voltages'][2]:.2f}V, "
-                              f"Temp: {data['temperature']:.2f}°C, "
-                              f"SOC: {data['state_of_charge']:.2f}%")
-                        
                         # Update displays through queue
-                        self.update_display_values(data)
+                        self.queue_update(lambda d=data: self.update_display_values(d))
                         
                         # Insert data into database
                         success = insert_data(
@@ -312,98 +313,76 @@ class BMSGUI:
                         )
                         
                         if success:
-                            records_collected += 1
-                            if records_collected % 10 == 0:  # Print status every 10 records
-                                print(f"\nTotal records collected: {records_collected}")
-                        else:
-                            print("Failed to insert data into database")
-                        
+                            # Queue graph update
+                            self.queue_graph_update()
+                            
                         # Queue temperature warning check
-                        self.queue_update(lambda: self.check_warnings(data['temperature']))
+                        self.queue_update(lambda t=data['temperature']: self.check_warnings(t))
                         
-                        # Queue graph update
-                        self.queue_update(self.update_graphs)
-                    else:
-                        print("No data received from BMS")
-                else:
-                    print("BMS not connected or not ready")
             except Exception as e:
-                print(f"Data collection error: {str(e)}")
+                print(f"Data collection error: {e}")
                 traceback.print_exc()
             
             time.sleep(1)
-        
-        print(f"\nData collection stopped. Total records collected: {records_collected}")
+            
+        print("Data collection stopped")
 
     def update_graphs(self):
-        """Update graphs (must be called from main thread)"""
+        """Update all graphs with latest data"""
+        if not self.graph_lock.acquire(blocking=False):
+            print("Graph update already in progress, skipping...")
+            return
+            
         try:
-            data = get_recent_data(60)
+            # Get recent data
+            data = get_recent_data(60)  # Get last minute of data
             if not data:
-                print("No data returned from get_recent_data")
                 return
                 
-            # Convert data to DataFrame with explicit column names
+            # Convert data to pandas DataFrame
             df = pd.DataFrame(data, columns=['timestamp', 'cell1_voltage', 'cell2_voltage', 
                                            'cell3_voltage', 'temperature', 'state_of_charge'])
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
             
-            # Convert timestamp strings to datetime objects
-            try:
-                df['timestamp'] = pd.to_datetime(df['timestamp'])
-            except Exception as te:
-                print(f"Timestamp conversion error: {str(te)}")
-                return
-            
-            # Clear all axes
-            for ax in [self.ax1, self.ax2, self.ax3]:
+            # Clear previous plots
+            for ax in [self.ax1, self.ax2, self.ax3, self.ax4]:
                 ax.clear()
             
-            # Redraw all plots
-            self.ax1.plot(df['timestamp'], df['cell1_voltage'], 'r-', label='Cell 1')
-            self.ax1.plot(df['timestamp'], df['cell2_voltage'], 'g-', label='Cell 2')
-            self.ax1.plot(df['timestamp'], df['cell3_voltage'], 'b-', label='Cell 3')
-            
-            self.ax2.plot(df['timestamp'], df['temperature'], 'r-', label='Temperature')
-            self.ax3.plot(df['timestamp'], df['state_of_charge'], 'm-', label='SOC')
-            
-            # Redraw threshold lines
-            self.ax1.axhline(y=self.cell_voltage_threshold, color='red', linestyle='--', 
-                           linewidth=2, label=f'Threshold ({self.cell_voltage_threshold}V)')
-            self.ax2.axhline(y=self.temp_threshold, color='red', linestyle='--', 
-                           linewidth=2, label=f'Threshold ({self.temp_threshold}°C)')
-            
-            # Reconfigure the graphs
-            self.ax1.set_title('Cell Voltages (V)')
-            self.ax1.set_ylabel('Voltage')
-            self.ax1.legend(loc='upper right')
+            # Plot cell voltages
+            self.ax1.plot(df['timestamp'], df['cell1_voltage'], label='Cell 1')
+            self.ax1.plot(df['timestamp'], df['cell2_voltage'], label='Cell 2')
+            self.ax1.plot(df['timestamp'], df['cell3_voltage'], label='Cell 3')
+            self.ax1.set_title('Cell Voltages')
+            self.ax1.set_xlabel('Time')
+            self.ax1.set_ylabel('Voltage (V)')
+            self.ax1.legend()
             self.ax1.grid(True)
             
-            self.ax2.set_title('Temperature (°C)')
-            self.ax2.set_ylabel('Temperature')
-            self.ax2.legend(loc='upper right')
+            # Plot temperature
+            self.ax2.plot(df['timestamp'], df['temperature'], 'r-', label='Temperature')
+            self.ax2.set_title('Temperature')
+            self.ax2.set_xlabel('Time')
+            self.ax2.set_ylabel('Temperature (°C)')
+            self.ax2.legend()
             self.ax2.grid(True)
             
-            self.ax3.set_title('State of Charge (%)')
-            self.ax3.set_ylabel('SOC')
-            self.ax3.legend(loc='upper right')
+            # Plot state of charge
+            self.ax3.plot(df['timestamp'], df['state_of_charge'], 'g-', label='SOC')
+            self.ax3.set_title('State of Charge')
+            self.ax3.set_xlabel('Time')
+            self.ax3.set_ylabel('SOC (%)')
+            self.ax3.legend()
             self.ax3.grid(True)
             
-            # Format x-axis
-            from matplotlib.dates import DateFormatter
-            date_format = DateFormatter('%H:%M:%S')
-            for ax in [self.ax1, self.ax2, self.ax3]:
-                ax.set_xlabel('Time')
-                ax.xaxis.set_major_formatter(date_format)
-                ax.tick_params(axis='x', rotation=45)
-            
-            # Update layout and draw
+            # Adjust layout and draw
             self.fig.tight_layout()
-            self.canvas.draw()
+            self.canvas.draw_idle()
             
         except Exception as e:
-            print(f"Graph update error: {str(e)}")
-            import traceback
+            print(f"Error updating graphs: {e}")
             traceback.print_exc()
+        finally:
+            self.graph_lock.release()
 
     def export_data(self):
         try:

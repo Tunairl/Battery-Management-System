@@ -4,16 +4,34 @@ import os
 import sys
 import traceback
 
-# Make database path absolute and consistent
-DB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'database')
-DB_PATH = os.path.join(DB_DIR, 'battery_data.db')
-
 def get_db_path():
     """Get absolute path to database file, creating directory if needed"""
-    os.makedirs(DB_DIR, exist_ok=True)
-    abs_path = os.path.abspath(DB_PATH)
-    print(f"Database absolute path: {abs_path}")
-    return abs_path
+    try:
+        # Get the absolute path of the current script
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Navigate up two directories to reach the root project directory
+        project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
+        
+        # Create database directory path
+        db_dir = os.path.join(project_root, 'database')
+        
+        # Create the database directory if it doesn't exist
+        os.makedirs(db_dir, exist_ok=True)
+        
+        # Create the database file path
+        db_path = os.path.join(db_dir, 'battery_data.db')
+        
+        # Convert to absolute path and normalize
+        db_path = os.path.abspath(os.path.normpath(db_path))
+        
+        print(f"Using database path: {db_path}")
+        return db_path
+        
+    except Exception as e:
+        print(f"Error in get_db_path: {str(e)}")
+        traceback.print_exc()
+        return None
 
 def verify_database():
     """Verify database exists and has correct schema"""
