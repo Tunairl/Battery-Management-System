@@ -1,12 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-import matplotlib
-# Force Agg backend before importing pyplot
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-from matplotlib.dates import DateFormatter
 import pandas as pd
 from datetime import datetime, timedelta
 import sqlite3
@@ -15,10 +10,7 @@ import threading
 import time
 import os
 import sys
-from database import create_database, insert_data, get_recent_data, clear_data, verify_database, get_db_path
-import queue
-import traceback
-import numpy as np
+from database import create_database, insert_data, get_recent_data, clear_data
 
 class BMSGUI:
     def __init__(self, root):
@@ -34,27 +26,10 @@ class BMSGUI:
             self.cell_voltage_threshold = 20.0
             self.collection_thread = None
             
-            # Create update queue for thread-safe updates
-            self.update_queue = queue.Queue()
-            self.graph_update_queue = queue.Queue()
-            
-            # Create locks for thread safety
-            self.graph_lock = threading.Lock()
-            
-            # Initialize plot data
-            self.timestamps = []
-            self.cell1_data = []
-            self.cell2_data = []
-            self.cell3_data = []
-            self.temp_data = []
-            self.soc_data = []
-            
             # Create database directory and initialize database
             try:
-                if not create_database():
-                    messagebox.showerror("Database Error", "Failed to initialize database")
-                    self.root.destroy()
-                    return
+                os.makedirs('database', exist_ok=True)
+                create_database()
             except Exception as e:
                 messagebox.showerror("Database Error", f"Failed to initialize database: {str(e)}")
                 self.root.destroy()
@@ -68,9 +43,6 @@ class BMSGUI:
                 self.root.destroy()
                 return
             
-            # Start update processing
-            self.process_updates()
-            
             # Create UI elements
             self.create_frames()
             self.create_connection_panel()
@@ -78,58 +50,10 @@ class BMSGUI:
             self.create_graphs()
             self.create_control_panel()
             
-            # Schedule periodic graph updates
-            self.schedule_graph_update()
-            
         except Exception as e:
             messagebox.showerror("Initialization Error", f"Failed to initialize application: {str(e)}")
             self.root.destroy()
             return
-
-    def schedule_graph_update(self):
-        """Schedule periodic graph updates"""
-        try:
-            if not self.graph_update_queue.empty():
-                self.update_graphs()
-            self.root.after(1000, self.schedule_graph_update)  # Schedule next update
-        except Exception as e:
-            print(f"Error scheduling graph update: {e}")
-            traceback.print_exc()
-
-    def process_updates(self):
-        """Process queued updates in the main thread"""
-        try:
-            while not self.update_queue.empty():
-                update_func = self.update_queue.get_nowait()
-                update_func()
-        except Exception as e:
-            print(f"Error processing updates: {e}")
-            traceback.print_exc()
-        finally:
-            self.root.after(100, self.process_updates)
-
-    def queue_update(self, func):
-        """Queue a function to be executed in the main thread"""
-        self.update_queue.put(func)
-
-    def queue_graph_update(self):
-        """Queue a graph update"""
-        self.graph_update_queue.put(True)
-
-    def update_display_values(self, data):
-        """Update display values in a thread-safe way"""
-        def _update():
-            try:
-                if 'cell_voltages' in data and len(data['cell_voltages']) >= 3:
-                    self.cell1_var.set(f"{data['cell_voltages'][0]:.2f}")
-                    self.cell2_var.set(f"{data['cell_voltages'][1]:.2f}")
-                    self.cell3_var.set(f"{data['cell_voltages'][2]:.2f}")
-                self.temp_var.set(f"{data['temperature']:.2f}")
-                self.soc_var.set(f"{data['state_of_charge']:.2f}")
-            except Exception as e:
-                print(f"Error updating display values: {str(e)}")
-        
-        self.queue_update(_update)
 
     def create_frames(self):
         try:
@@ -191,57 +115,53 @@ class BMSGUI:
 
     def create_graphs(self):
         try:
-            # Create figure with tight layout
-            self.fig = Figure(figsize=(10, 8), constrained_layout=True)
+            self.fig = plt.figure(figsize=(10, 8))
             
-            # Create subplots
-            self.ax1 = self.fig.add_subplot(221)  # Cell Voltages
-            self.ax2 = self.fig.add_subplot(222)  # Temperature
-            self.ax3 = self.fig.add_subplot(223)  # State of Charge
+            # Create a 2x2 grid of graphs
+            self.ax1 = self.fig.add_subplot(2, 2, 1)  # Cell Voltages (top-left)
+            self.ax2 = self.fig.add_subplot(2, 2, 2)  # Temperature (top-right)
+            self.ax3 = self.fig.add_subplot(2, 2, 3)  # SOC (bottom-left)
             
-            # Create canvas
             self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
-            self.canvas_widget = self.canvas.get_tk_widget()
-            self.canvas_widget.pack(fill=tk.BOTH, expand=True)
+            self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
             
-            # Initialize empty lines
+            # Cell voltage lines
             self.cell1_line, = self.ax1.plot([], [], 'r-', label='Cell 1')
             self.cell2_line, = self.ax1.plot([], [], 'g-', label='Cell 2')
             self.cell3_line, = self.ax1.plot([], [], 'b-', label='Cell 3')
+            
             self.temp_line, = self.ax2.plot([], [], 'r-', label='Temperature')
-            self.soc_line, = self.ax3.plot([], [], 'g-', label='SOC')
+            self.soc_line, = self.ax3.plot([], [], 'm-', label='SOC')
             
-            # Configure axes
-            self.ax1.set_title('Cell Voltages')
-            self.ax1.set_xlabel('Time')
-            self.ax1.set_ylabel('Voltage (V)')
+            # Add threshold lines
+            self.cell_voltage_threshold_line = self.ax1.axhline(y=self.cell_voltage_threshold, color='red', linestyle='--', linewidth=2, label=f'Threshold ({self.cell_voltage_threshold}V)')
+            self.temp_threshold_line = self.ax2.axhline(y=self.temp_threshold, color='red', linestyle='--', linewidth=2, label=f'Threshold ({self.temp_threshold}°C)')
+            
+            # Configure each graph
+            self.ax1.set_title('Cell Voltages (V)')
+            self.ax1.set_ylabel('Voltage')
+            self.ax1.legend(loc='upper right')
             self.ax1.grid(True)
-            self.ax1.legend()
             
-            self.ax2.set_title('Temperature')
-            self.ax2.set_xlabel('Time')
-            self.ax2.set_ylabel('Temperature (°C)')
+            self.ax2.set_title('Temperature (°C)')
+            self.ax2.set_ylabel('Temperature')
+            self.ax2.legend(loc='upper right')
             self.ax2.grid(True)
-            self.ax2.legend()
             
-            self.ax3.set_title('State of Charge')
-            self.ax3.set_xlabel('Time')
-            self.ax3.set_ylabel('SOC (%)')
+            self.ax3.set_title('State of Charge (%)')
+            self.ax3.set_ylabel('SOC')
+            self.ax3.legend(loc='upper right')
             self.ax3.grid(True)
-            self.ax3.legend()
             
-            # Set date formatter for x-axis
-            date_fmt = DateFormatter('%H:%M:%S')
+            # Format the x-axis to display time properly
             for ax in [self.ax1, self.ax2, self.ax3]:
-                ax.xaxis.set_major_formatter(date_fmt)
+                ax.set_xlabel('Time')
                 ax.tick_params(axis='x', rotation=45)
+                plt.setp(ax.get_xticklabels(), ha='right')
             
-            # Initial draw
-            self.canvas.draw()
-            
+            self.fig.tight_layout()
         except Exception as e:
-            print(f"Error creating graphs: {e}")
-            traceback.print_exc()
+            messagebox.showerror("UI Error", f"Failed to create graphs: {str(e)}")
             raise
 
     def create_control_panel(self):
@@ -283,36 +203,39 @@ class BMSGUI:
             else:
                 self.data_collection_active = False
                 self.start_button.configure(text="Start Monitoring")
-                if self.collection_thread:
-                    self.collection_thread.join(timeout=2.0)
         except Exception as e:
             messagebox.showerror("Monitoring Error", f"Failed to toggle monitoring: {str(e)}")
 
     def check_warnings(self, temperature):
-        """Check temperature warnings (must be called from main thread)"""
         try:
             if temperature > self.temp_threshold:
                 self.temp_warning.config(text="⚠ High Temperature!")
-                messagebox.showerror("High Temperature Alert", 
-                    f"High Temperature Detected: {temperature:.2f}°C exceeds threshold of {self.temp_threshold}°C!")
+                messagebox.showerror("High Temperature Alert", f"High Temperature Detected: {temperature:.2f}°C exceeds threshold of {self.temp_threshold}°C!")
             else:
                 self.temp_warning.config(text="")
         except Exception as e:
             print(f"Warning check error: {str(e)}")
 
     def collect_data(self):
-        """Collect data from BMS in a separate thread"""
-        print("\nStarting data collection...")
         while self.data_collection_active:
             try:
                 if self.bms and self.bms.connected:
                     data = self.bms.read_data()
                     if data:
-                        # Update displays through queue
-                        self.queue_update(lambda d=data: self.update_display_values(d))
+                        # Update displays
+                        if 'cell_voltages' in data and len(data['cell_voltages']) >= 3:
+                            self.cell1_var.set(f"{data['cell_voltages'][0]:.2f}")
+                            self.cell2_var.set(f"{data['cell_voltages'][1]:.2f}")
+                            self.cell3_var.set(f"{data['cell_voltages'][2]:.2f}")
+                        
+                        # Update temperature
+                        self.temp_var.set(f"{data['temperature']:.2f}")
+                        
+                        # Update state of charge
+                        self.soc_var.set(f"{data['state_of_charge']:.2f}")
                         
                         # Insert data into database
-                        success = insert_data(
+                        insert_data(
                             data['cell_voltages'][0],
                             data['cell_voltages'][1],
                             data['cell_voltages'][2],
@@ -320,111 +243,102 @@ class BMSGUI:
                             data['state_of_charge']
                         )
                         
-                        if success:
-                            # Queue graph update
-                            self.queue_graph_update()
-                            
-                        # Queue temperature warning check
-                        self.queue_update(lambda t=data['temperature']: self.check_warnings(t))
+                        self.check_warnings(data['temperature'])
                         
+                        self.update_graphs()
             except Exception as e:
-                print(f"Data collection error: {e}")
-                traceback.print_exc()
+                print(f"Data collection error: {str(e)}")
             
             time.sleep(1)
-            
-        print("Data collection stopped")
 
     def update_graphs(self):
-        """Update all graphs with latest data"""
-        if not self.graph_lock.acquire(blocking=False):
-            print("Graph update already in progress, skipping...")
-            return
-            
         try:
-            # Get recent data
-            data = get_recent_data(60)  # Get last minute of data
+            data = get_recent_data(60)
             if not data:
-                self.graph_lock.release()
+                print("No data returned from get_recent_data")
                 return
                 
-            # Convert data to numpy arrays for better performance
-            timestamps = pd.to_datetime([row[0] for row in data])
-            cell1_data = np.array([row[1] for row in data])
-            cell2_data = np.array([row[2] for row in data])
-            cell3_data = np.array([row[3] for row in data])
-            temp_data = np.array([row[4] for row in data])
-            soc_data = np.array([row[5] for row in data])
-            
-            # Update line data
-            self.cell1_line.set_data(timestamps, cell1_data)
-            self.cell2_line.set_data(timestamps, cell2_data)
-            self.cell3_line.set_data(timestamps, cell3_data)
-            self.temp_line.set_data(timestamps, temp_data)
-            self.soc_line.set_data(timestamps, soc_data)
-            
-            # Update axis limits
-            for ax in [self.ax1, self.ax2, self.ax3]:
-                ax.relim()
-                ax.autoscale_view()
-            
-            # Draw canvas
-            self.canvas.draw_idle()
-            
-        except Exception as e:
-            print(f"Error updating graphs: {e}")
-            traceback.print_exc()
-        finally:
-            self.graph_lock.release()
-
-    def export_data(self):
-        try:
-            print("\nStarting data export process...")
-            
-            # First verify database is accessible
-            if not verify_database():
-                messagebox.showerror("Export Error", "Database verification failed")
-                return
-                
-            # Get all data
-            print("Retrieving all data for export...")
-            data = get_recent_data(0)  # Get all data
-            
-            if not data:
-                print("No data available for export")
-                messagebox.showinfo("Info", "No data available to export.\nMake sure you have:\n1. Connected to BMS\n2. Started monitoring\n3. Collected some data")
-                return
-            
-            # Convert data to DataFrame
+            # Convert data to DataFrame with explicit column names
             df = pd.DataFrame(data, columns=['timestamp', 'cell1_voltage', 'cell2_voltage', 
                                            'cell3_voltage', 'temperature', 'state_of_charge'])
             
-            # Create export directory if it doesn't exist
-            export_dir = "exports"
-            os.makedirs(export_dir, exist_ok=True)
+            # Convert timestamp strings to datetime objects
+            try:
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
+                print(f"Converted timestamps. Sample: {df['timestamp'].iloc[0] if not df.empty else 'No data'}")
+            except Exception as te:
+                print(f"Timestamp conversion error: {str(te)}. First timestamp: {df['timestamp'].iloc[0] if not df.empty else 'No data'}")
+                return
             
-            # Generate filename with timestamp
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = os.path.join(export_dir, f"bms_data_{timestamp}.csv")
+            # Debug print
+            print(f"Data retrieved: {len(df)} rows")
+            if not df.empty:
+                print(f"Sample data - Time: {df['timestamp'].iloc[0]}, Cell1: {df['cell1_voltage'].iloc[0]}")
             
-            # Export data
-            print(f"Exporting {len(df)} records to {filename}")
-            df.to_csv(filename, index=False)
+            # Reset data on all lines first
+            self.cell1_line.set_data([], [])
+            self.cell2_line.set_data([], [])
+            self.cell3_line.set_data([], [])
+            self.temp_line.set_data([], [])
+            self.soc_line.set_data([], [])
             
-            # Verify export
-            if os.path.exists(filename):
-                file_size = os.path.getsize(filename)
-                print(f"Export successful. File size: {file_size} bytes")
-                messagebox.showinfo("Success", f"Data exported successfully to:\n{filename}\nRecords exported: {len(df)}")
-            else:
-                print("Export file not found after creation")
-                messagebox.showerror("Export Error", "Failed to create export file")
+            # If we have data, then set it
+            if not df.empty:
+                # Update individual cell voltage graphs
+                self.cell1_line.set_data(df['timestamp'], df['cell1_voltage'])
+                self.cell2_line.set_data(df['timestamp'], df['cell2_voltage'])
+                self.cell3_line.set_data(df['timestamp'], df['cell3_voltage'])
                 
+                # Update temperature graph
+                self.temp_line.set_data(df['timestamp'], df['temperature'])
+                
+                # Update SOC graph
+                self.soc_line.set_data(df['timestamp'], df['state_of_charge'])
+                
+                # Update the axis limits
+                for ax in [self.ax1, self.ax2, self.ax3]:
+                    ax.relim()
+                    ax.autoscale_view()
+                
+                # Set date formatter for x-axis
+                from matplotlib.dates import DateFormatter
+                date_format = DateFormatter('%H:%M:%S')
+                for ax in [self.ax1, self.ax2, self.ax3]:
+                    ax.xaxis.set_major_formatter(date_format)
+                
+                # Ensure threshold lines remain visible after autoscaling
+                y_min, y_max = self.ax1.get_ylim()
+                if y_max < self.cell_voltage_threshold:
+                    self.ax1.set_ylim(y_min, self.cell_voltage_threshold * 1.1)
+                
+                y_min, y_max = self.ax2.get_ylim()
+                if y_max < self.temp_threshold:
+                    self.ax2.set_ylim(y_min, self.temp_threshold * 1.1)
+            
+            # Force redraw
+            self.fig.tight_layout()  # Adjust layout to accommodate labels
+            self.canvas.draw_idle()
+            self.canvas.flush_events()
         except Exception as e:
-            error_msg = f"Failed to export data: {str(e)}"
-            print(error_msg)
+            print(f"Graph update error: {str(e)}")
+            import traceback
             traceback.print_exc()
-            messagebox.showerror("Export Error", error_msg)
+
+    def export_data(self):
+        try:
+            data = get_recent_data(0)  # Get all data
+            if not data:
+                messagebox.showinfo("Info", "No data to export")
+                return
+                
+            df = pd.DataFrame(data, columns=['timestamp', 'cell1_voltage', 'cell2_voltage', 
+                                           'cell3_voltage', 'temperature', 'state_of_charge'])
+            
+            filename = f"bms_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            df.to_csv(filename, index=False)
+            messagebox.showinfo("Success", f"Data exported to {filename}")
+        except Exception as e:
+            messagebox.showerror("Export Error", f"Failed to export data: {str(e)}")
 
     def clear_data(self):
         try:
