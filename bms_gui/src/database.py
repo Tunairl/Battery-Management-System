@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime, timedelta
 import os
 import sys
+import traceback
 
 # Make database path absolute and consistent
 DB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'database')
@@ -10,8 +11,38 @@ DB_PATH = os.path.join(DB_DIR, 'battery_data.db')
 def get_db_path():
     """Get absolute path to database file, creating directory if needed"""
     os.makedirs(DB_DIR, exist_ok=True)
-    print(f"Database path: {DB_PATH}")
-    return DB_PATH
+    abs_path = os.path.abspath(DB_PATH)
+    print(f"Database absolute path: {abs_path}")
+    return abs_path
+
+def verify_database():
+    """Verify database exists and has correct schema"""
+    try:
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Check if tables exist
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = cursor.fetchall()
+        print(f"Existing tables: {[table[0] for table in tables]}")
+        
+        # Check BatteryData schema
+        cursor.execute("PRAGMA table_info(BatteryData)")
+        columns = cursor.fetchall()
+        print(f"BatteryData columns: {[col[1] for col in columns]}")
+        
+        # Check row count
+        cursor.execute("SELECT COUNT(*) FROM BatteryData")
+        count = cursor.fetchone()[0]
+        print(f"Current row count in BatteryData: {count}")
+        
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Database verification error: {str(e)}")
+        traceback.print_exc()
+        return False
 
 def create_database():
     db_path = get_db_path()
@@ -51,11 +82,17 @@ def create_database():
         
         conn.commit()
         conn.close()
-        print("Database initialized successfully")
-        return True
+        
+        # Verify the database was created correctly
+        if verify_database():
+            print("Database initialized successfully")
+            return True
+        else:
+            print("Database verification failed after creation")
+            return False
+            
     except Exception as e:
         print(f"Database initialization error: {str(e)}")
-        import traceback
         traceback.print_exc()
         return False
 
@@ -76,13 +113,16 @@ def insert_data(cell1_voltage, cell2_voltage, cell3_voltage, temperature, state_
               temperature, state_of_charge))
         
         conn.commit()
+        
+        # Verify the insertion
+        cursor.execute("SELECT * FROM BatteryData WHERE timestamp = ?", (timestamp,))
+        inserted_row = cursor.fetchone()
+        print(f"Inserted data: {inserted_row}")
+        
         conn.close()
-        # Debug print
-        print(f"Data inserted: {timestamp}, {cell1_voltage}, {cell2_voltage}, {cell3_voltage}, {temperature}, {state_of_charge}")
         return True
     except Exception as e:
         print(f"Error inserting data: {str(e)}")
-        import traceback
         traceback.print_exc()
         return False
 
@@ -104,12 +144,14 @@ def get_recent_data(seconds=60):
         ''', (time_threshold,))
         
         data = cursor.fetchall()
+        print(f"Retrieved {len(data)} records from database for last {seconds} seconds")
+        if data:
+            print(f"Sample record: {data[0]}")
+        
         conn.close()
-        print(f"Retrieved {len(data)} recent data points from last {seconds} seconds")
         return data
     except Exception as e:
         print(f"Error retrieving data: {str(e)}")
-        import traceback
         traceback.print_exc()
         return []
 
@@ -118,14 +160,23 @@ def clear_data():
         db_path = get_db_path()
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
+        
+        # Get count before deletion
+        cursor.execute("SELECT COUNT(*) FROM BatteryData")
+        count_before = cursor.fetchone()[0]
+        
         cursor.execute('DELETE FROM BatteryData')
+        
+        # Get count after deletion
+        cursor.execute("SELECT COUNT(*) FROM BatteryData")
+        count_after = cursor.fetchone()[0]
+        
         conn.commit()
         conn.close()
-        print("All data cleared from database")
+        print(f"Cleared data from database. Rows before: {count_before}, after: {count_after}")
         return True
     except Exception as e:
         print(f"Error clearing data: {str(e)}")
-        import traceback
         traceback.print_exc()
         return False
 
