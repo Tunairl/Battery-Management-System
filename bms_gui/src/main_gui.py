@@ -230,6 +230,15 @@ class BMSGUI:
                         # Update state of charge
                         self.soc_var.set(f"{data['state_of_charge']:.2f}")
                         
+                        # Insert data into database
+                        insert_data(
+                            data['cell_voltages'][0],
+                            data['cell_voltages'][1],
+                            data['cell_voltages'][2],
+                            data['temperature'],
+                            data['state_of_charge']
+                        )
+                        
                         self.check_warnings(data['temperature'])
                         
                         self.update_graphs()

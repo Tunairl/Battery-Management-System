@@ -42,11 +42,14 @@ def insert_data(cell1_voltage, cell2_voltage, cell3_voltage, temperature, state_
     conn = sqlite3.connect('database/battery_data.db')
     cursor = conn.cursor()
     
+    # Use ISO format to ensure compatibility with SQLite datetime functions
+    timestamp = datetime.now().isoformat()
+    
     cursor.execute('''
     INSERT INTO BatteryData (timestamp, cell1_voltage, cell2_voltage, cell3_voltage, 
                            temperature, state_of_charge)
     VALUES (?, ?, ?, ?, ?, ?)
-    ''', (datetime.now(), cell1_voltage, cell2_voltage, cell3_voltage, 
+    ''', (timestamp, cell1_voltage, cell2_voltage, cell3_voltage, 
           temperature, state_of_charge))
     
     conn.commit()
@@ -60,9 +63,9 @@ def get_recent_data(seconds=60):
     SELECT timestamp, cell1_voltage, cell2_voltage, cell3_voltage,
            temperature, state_of_charge
     FROM BatteryData 
-    WHERE timestamp >= datetime('now', ? || ' seconds')
+    WHERE timestamp >= datetime('now', '-' || ? || ' seconds')
     ORDER BY timestamp
-    ''', (-seconds,))
+    ''', (seconds,))
     
     data = cursor.fetchall()
     conn.close()
