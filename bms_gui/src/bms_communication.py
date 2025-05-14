@@ -32,12 +32,12 @@ class BMSCommunication:
         self.is_raspberry_pi = False
         
         # Initialize data storage
-        self.cell_values = [0.0, 0.0, 0.0]
-        self.temperature = 0.0
-        self.humidity = 0.0
-        self.total_voltage = 0.0
-        self.current = 0.0
-        self.state_of_charge = 0.0
+        self.cell_values = [3.5, 3.6, 3.7]  # Initialize with realistic values
+        self.temperature = 25.0
+        self.humidity = 50.0
+        self.total_voltage = sum(self.cell_values)
+        self.current = 2.0
+        self.state_of_charge = 75.0
         
         # Setup logging
         os.makedirs('logs', exist_ok=True)
