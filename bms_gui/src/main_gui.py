@@ -8,9 +8,10 @@ import sqlite3
 from bms_communication import BMSCommunication
 import threading
 import time
+import queue
 import os
 import sys
-from database import create_database, insert_data, get_recent_data, clear_data
+from database_schema import get_db_connection, insert_data, get_recent_data, clear_data
 
 class BMSGUI:
     def __init__(self, root):
@@ -25,6 +26,7 @@ class BMSGUI:
             self.temp_threshold = 40.0
             self.cell_voltage_threshold = 20.0
             self.collection_thread = None
+            self.update_queue = queue.Queue()
             
             # Create database directory and initialize database
             try:
@@ -43,6 +45,9 @@ class BMSGUI:
                 self.root.destroy()
                 return
             
+            # Load configuration
+            self.load_configuration()
+            
             # Create UI elements
             self.create_frames()
             self.create_connection_panel()
@@ -50,10 +55,28 @@ class BMSGUI:
             self.create_graphs()
             self.create_control_panel()
             
+            # Start update checker
+            self.check_updates()
+            
         except Exception as e:
             messagebox.showerror("Initialization Error", f"Failed to initialize application: {str(e)}")
             self.root.destroy()
             return
+
+    def load_configuration(self):
+        """Load configuration from database"""
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT parameter_name, value FROM Configuration')
+                config = dict(cursor.fetchall())
+                
+                self.voltage_threshold = float(config.get('voltage_warning_threshold', 3.7))
+                self.temp_threshold = float(config.get('temperature_warning_threshold', 40.0))
+        except Exception as e:
+            print(f"Error loading configuration: {e}")
+            self.voltage_threshold = 3.7
+            self.temp_threshold = 40.0
 
     def create_frames(self):
         try:
@@ -86,17 +109,10 @@ class BMSGUI:
     def create_real_time_display(self):
         try:
             # Cell voltage displays
-            ttk.Label(self.display_frame, text="Cell 1 (V):").grid(row=0, column=0, padx=5, pady=5)
-            self.cell1_var = tk.StringVar(value="0.0")
-            ttk.Label(self.display_frame, textvariable=self.cell1_var).grid(row=0, column=1, padx=5, pady=5)
-            
-            ttk.Label(self.display_frame, text="Cell 2 (V):").grid(row=1, column=0, padx=5, pady=5)
-            self.cell2_var = tk.StringVar(value="0.0")
-            ttk.Label(self.display_frame, textvariable=self.cell2_var).grid(row=1, column=1, padx=5, pady=5)
-            
-            ttk.Label(self.display_frame, text="Cell 3 (V):").grid(row=2, column=0, padx=5, pady=5)
-            self.cell3_var = tk.StringVar(value="0.0")
-            ttk.Label(self.display_frame, textvariable=self.cell3_var).grid(row=2, column=1, padx=5, pady=5)
+            for i in range(3):
+                ttk.Label(self.display_frame, text=f"Cell {i+1} Voltage (V):").grid(row=i, column=0, padx=5, pady=5)
+                setattr(self, f'cell{i+1}_var', tk.StringVar(value="0.0"))
+                ttk.Label(self.display_frame, textvariable=getattr(self, f'cell{i+1}_var')).grid(row=i, column=1, padx=5, pady=5)
             
             # Temperature display
             ttk.Label(self.display_frame, text="Temperature (°C):").grid(row=3, column=0, padx=5, pady=5)
@@ -174,6 +190,75 @@ class BMSGUI:
             messagebox.showerror("UI Error", f"Failed to create control panel: {str(e)}")
             raise
 
+    def check_updates(self):
+        """Check for updates in the queue and update the UI"""
+        try:
+            while True:
+                update = self.update_queue.get_nowait()
+                if update['type'] == 'data':
+                    self.update_displays(update['data'])
+                elif update['type'] == 'graph':
+                    self.update_graph_data(update['data'])
+        except queue.Empty:
+            pass
+        finally:
+            # Schedule the next check
+            self.root.after(100, self.check_updates)
+
+    def update_displays(self, data):
+        """Update the display values"""
+        try:
+            if 'cell_voltages' in data and len(data['cell_voltages']) >= 3:
+                for i in range(3):
+                    getattr(self, f'cell{i+1}_var').set(f"{data['cell_voltages'][i]:.2f}")
+            
+            self.temp_var.set(f"{data['temperature']:.2f}")
+            self.soc_var.set(f"{data['state_of_charge']:.2f}")
+            
+            # Check warnings
+            if data['temperature'] > self.temp_threshold:
+                self.temp_warning.config(text="⚠ High Temperature!")
+            else:
+                self.temp_warning.config(text="")
+        except Exception as e:
+            print(f"Error updating displays: {e}")
+
+    def update_graph_data(self, data):
+        """Update the graph data"""
+        try:
+            df = pd.DataFrame(data, columns=['timestamp', 'cell1_voltage', 'cell2_voltage', 
+                                           'cell3_voltage', 'temperature', 'state_of_charge'])
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+            
+            # Update cell voltage plots
+            self.cell1_line.set_data(df['timestamp'], df['cell1_voltage'])
+            self.cell2_line.set_data(df['timestamp'], df['cell2_voltage'])
+            self.cell3_line.set_data(df['timestamp'], df['cell3_voltage'])
+            
+            # Update temperature plot
+            self.temp_line.set_data(df['timestamp'], df['temperature'])
+            
+            # Update SOC plot
+            self.soc_line.set_data(df['timestamp'], df['state_of_charge'])
+            
+            # Update axis limits
+            for ax in [self.ax1, self.ax2, self.ax3]:
+                ax.relim()
+                ax.autoscale_view()
+            
+            # Ensure threshold lines remain visible after autoscaling
+            y_min, y_max = self.ax1.get_ylim()
+            if y_max < self.cell_voltage_threshold:
+                self.ax1.set_ylim(y_min, self.cell_voltage_threshold * 1.1)
+            
+            y_min, y_max = self.ax2.get_ylim()
+            if y_max < self.temp_threshold:
+                self.ax2.set_ylim(y_min, self.temp_threshold * 1.1)
+            
+            self.canvas.draw_idle()
+        except Exception as e:
+            print(f"Error updating graphs: {e}")
+
     def toggle_connection(self):
         try:
             if not self.bms.connected:
@@ -202,81 +287,32 @@ class BMSGUI:
         except Exception as e:
             messagebox.showerror("Monitoring Error", f"Failed to toggle monitoring: {str(e)}")
 
-    def check_warnings(self, temperature):
-        try:
-            if temperature > self.temp_threshold:
-                self.temp_warning.config(text="⚠ High Temperature!")
-                messagebox.showerror("High Temperature Alert", f"High Temperature Detected: {temperature:.2f}°C exceeds threshold of {self.temp_threshold}°C!")
-            else:
-                self.temp_warning.config(text="")
-        except Exception as e:
-            print(f"Warning check error: {str(e)}")
-
     def collect_data(self):
         while self.data_collection_active:
             try:
                 if self.bms and self.bms.connected:
                     data = self.bms.read_data()
                     if data:
-                        # Update displays
+                        # Queue the data for UI update
+                        self.update_queue.put({'type': 'data', 'data': data})
+                        
+                        # Insert into database
                         if 'cell_voltages' in data and len(data['cell_voltages']) >= 3:
-                            self.cell1_var.set(f"{data['cell_voltages'][0]:.2f}")
-                            self.cell2_var.set(f"{data['cell_voltages'][1]:.2f}")
-                            self.cell3_var.set(f"{data['cell_voltages'][2]:.2f}")
+                            insert_data(
+                                data['cell_voltages'][0],
+                                data['cell_voltages'][1],
+                                data['cell_voltages'][2],
+                                data['temperature'],
+                                data['state_of_charge']
+                            )
                         
-                        # Update temperature
-                        self.temp_var.set(f"{data['temperature']:.2f}")
-                        
-                        # Update state of charge
-                        self.soc_var.set(f"{data['state_of_charge']:.2f}")
-                        
-                        self.check_warnings(data['temperature'])
-                        
-                        self.update_graphs()
+                        # Queue graph update
+                        recent_data = get_recent_data(60)
+                        self.update_queue.put({'type': 'graph', 'data': recent_data})
             except Exception as e:
                 print(f"Data collection error: {str(e)}")
             
             time.sleep(1)
-
-    def update_graphs(self):
-        try:
-            data = get_recent_data(60)
-            if not data:
-                return
-                
-            # Convert data to DataFrame
-            df = pd.DataFrame(data, columns=['timestamp', 'cell1_voltage', 'cell2_voltage', 
-                                           'cell3_voltage', 'temperature', 'state_of_charge'])
-            df['timestamp'] = pd.to_datetime(df['timestamp'])
-            
-            # Update individual cell voltage graphs
-            self.cell1_line.set_data(df['timestamp'], df['cell1_voltage'])
-            self.cell2_line.set_data(df['timestamp'], df['cell2_voltage'])
-            self.cell3_line.set_data(df['timestamp'], df['cell3_voltage'])
-            
-            # Update temperature graph
-            self.temp_line.set_data(df['timestamp'], df['temperature'])
-            
-            # Update SOC graph
-            self.soc_line.set_data(df['timestamp'], df['state_of_charge'])
-            
-            # Update the axis limits
-            for ax in [self.ax1, self.ax2, self.ax3]:
-                ax.relim()
-                ax.autoscale_view()
-            
-            # Ensure threshold lines remain visible after autoscaling
-            y_min, y_max = self.ax1.get_ylim()
-            if y_max < self.cell_voltage_threshold:
-                self.ax1.set_ylim(y_min, self.cell_voltage_threshold * 1.1)
-            
-            y_min, y_max = self.ax2.get_ylim()
-            if y_max < self.temp_threshold:
-                self.ax2.set_ylim(y_min, self.temp_threshold * 1.1)
-            
-            self.canvas.draw()
-        except Exception as e:
-            print(f"Graph update error: {str(e)}")
 
     def export_data(self):
         try:
@@ -300,9 +336,8 @@ class BMSGUI:
                 clear_data()
                 
                 # Reset displays
-                self.cell1_var.set("0.0")
-                self.cell2_var.set("0.0")
-                self.cell3_var.set("0.0")
+                for i in range(3):
+                    getattr(self, f'cell{i+1}_var').set("0.0")
                 self.temp_var.set("0.0")
                 self.soc_var.set("0.0")
                 

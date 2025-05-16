@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+from pathlib import Path
 from database_schema import create_database
 from main_gui import BMSGUI
 import tkinter as tk
@@ -9,24 +10,30 @@ def setup_logging():
     """Setup error logging"""
     os.makedirs('logs', exist_ok=True)
     logging.basicConfig(
-        filename='bms_error.log',
+        filename='logs/bms_error.log',
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
 def main():
     try:
-        # Setup directories
-        os.makedirs('database', exist_ok=True)
+        # Setup directories and ensure proper paths
+        db_dir = Path('database').absolute()
+        db_dir.mkdir(exist_ok=True)
+        
+        # Print database path for debugging
+        db_path = db_dir / 'battery_data.db'
+        print(f"Database path: {db_path}")
         
         # Setup logging
         setup_logging()
-        
-        # Log startup
         logging.info("=== BMS Application Starting ===")
+        logging.info(f"Database path: {db_path}")
         
         # Initialize database
+        print("Creating/initializing database at", db_path)
         create_database()
+        print("Database initialized successfully")
         
         # Start the GUI
         root = tk.Tk()
