@@ -11,7 +11,13 @@ import time
 import queue
 import os
 import sys
-from database_schema import get_db_connection, insert_data, get_recent_data, clear_data
+from database_schema import (
+    get_db_connection, 
+    insert_data, 
+    get_recent_data, 
+    clear_data,
+    create_database
+)
 
 class BMSGUI:
     def __init__(self, root):
