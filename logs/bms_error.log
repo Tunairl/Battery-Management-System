@@ -1,3 +1,15 @@
 2025-05-07 13:20:40,001 - INFO - Mock data connection established
 2025-05-07 13:35:54,158 - ERROR - Hardware not available
 2025-05-07 13:36:00,160 - ERROR - Hardware not available
+2025-05-16 11:14:38,596 - INFO - Using simulated data for testing
+2025-05-16 11:16:24,832 - INFO - Using simulated data for testing
+2025-05-16 11:16:56,850 - INFO - BMS Connection closed
+2025-05-16 11:22:28,328 - INFO - Using simulated data for testing
+2025-05-16 11:25:20,203 - INFO - Using simulated data for testing
+2025-05-16 11:27:42,619 - INFO - Using simulated data for testing
+2025-05-16 11:31:41,867 - INFO - Using simulated data for testing
+2025-05-16 11:34:51,430 - INFO - Using simulated data for testing
+2025-05-16 11:44:45,580 - INFO - Using simulated data for testing
+2025-05-16 11:45:37,620 - INFO - BMS Connection closed
+2025-05-16 11:48:52,491 - INFO - Using simulated data for testing
+2025-05-16 12:09:21,151 - INFO - Using simulated data for testing

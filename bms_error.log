@@ -28,3 +28,22 @@
 2025-05-14 11:41:07,461 - INFO - Using simulated data for testing
 2025-05-14 12:10:34,446 - INFO - === BMS Application Starting ===
 2025-05-14 12:10:41,287 - INFO - Using simulated data for testing
+2025-05-16 10:56:30,169 - INFO - === BMS Application Starting ===
+2025-05-16 10:56:33,762 - INFO - Using simulated data for testing
+2025-05-16 11:02:53,381 - INFO - === BMS Application Starting ===
+2025-05-16 11:02:59,062 - INFO - Using simulated data for testing
+2025-05-16 11:04:02,118 - INFO - BMS Connection closed
+2025-05-16 11:40:49,112 - INFO - === BMS Application Starting ===
+2025-05-16 11:40:51,007 - WARNING - No hardware detected. Please connect actual hardware.
+2025-05-16 11:40:55,866 - WARNING - No hardware detected. Please connect actual hardware.
+2025-05-16 11:41:36,300 - INFO - === BMS Application Starting ===
+2025-05-16 11:41:38,769 - INFO - Using simulated data for testing
+2025-05-16 11:42:07,433 - INFO - === BMS Application Starting ===
+2025-05-16 11:42:10,051 - INFO - Using simulated data for testing
+2025-05-16 12:16:18,065 - INFO - === BMS Application Starting ===
+2025-05-16 12:16:20,051 - INFO - Using simulated data for testing
+2025-05-16 12:23:01,956 - INFO - === BMS Application Starting ===
+2025-05-16 12:23:04,029 - INFO - Using simulated data for testing
+2025-05-16 12:26:34,105 - INFO - === BMS Application Starting ===
+2025-05-16 12:26:37,454 - INFO - Using simulated data for testing
+2025-05-16 12:26:58,467 - INFO - BMS Connection closed

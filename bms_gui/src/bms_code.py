@@ -25,10 +25,9 @@ while True:
         # Print the values to the serial port
         temperature_c = dhtDevice.temperature
         temperature_f = temperature_c * (9 / 5) + 32
-        humidity = dhtDevice.humidity
         print(
-            "Date-Time: {} Temp: {:.1f} F / {:.1f} C Humidity: {}% cell1:{:.2f} V	cell2:{:.2f} V	cell3:{:.2f} V".format(
-                full_datetime, temperature_f, temperature_c, humidity, cell1, cell2, cell3
+            "Date-Time: {} Temp: {:.1f} F / {:.1f} C cell1:{:.2f} V  cell2:{:.2f} V  cell3:{:.2f} V".format(
+                full_datetime, temperature_f, temperature_c, cell1, cell2, cell3
             )
         )
 

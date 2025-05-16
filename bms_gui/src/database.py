@@ -38,54 +38,89 @@ def create_database():
     print("Database initialized successfully")
 
 def insert_data(cell1_voltage, cell2_voltage, cell3_voltage, temperature, state_of_charge):
+    conn = None
     try:
-        conn = sqlite3.connect('database/battery_data.db')
+        # Add timeout to prevent indefinite waiting if database is locked
+        conn = sqlite3.connect('database/battery_data.db', timeout=10)
         cursor = conn.cursor()
         
         # Use ISO format to ensure compatibility with SQLite datetime functions
         timestamp = datetime.now().isoformat()
         
-        cursor.execute('''
+        # Debug print the values being inserted
+        print(f"Inserting values: timestamp={timestamp}, cell1={cell1_voltage}, cell2={cell2_voltage}, cell3={cell3_voltage}, temp={temperature}, soc={state_of_charge}")
+        
+        # Debug: Check the table structure 
+        cursor.execute("PRAGMA table_info(BatteryData)")
+        columns = cursor.fetchall()
+        print("Table structure:")
+        for col in columns:
+            print(f"  - {col[1]} ({col[2]})")
+        
+        # Insert the data
+        sql = '''
         INSERT INTO BatteryData (timestamp, cell1_voltage, cell2_voltage, cell3_voltage, 
                                temperature, state_of_charge)
         VALUES (?, ?, ?, ?, ?, ?)
-        ''', (timestamp, cell1_voltage, cell2_voltage, cell3_voltage, 
+        '''
+        print(f"SQL: {sql}")
+        
+        cursor.execute(sql, (timestamp, cell1_voltage, cell2_voltage, cell3_voltage, 
               temperature, state_of_charge))
         
         conn.commit()
-        conn.close()
-        # Debug print
-        print(f"Data inserted: {timestamp}, {cell1_voltage}, {cell2_voltage}, {cell3_voltage}, {temperature}, {state_of_charge}")
+        print(f"Data inserted successfully")
         return True
     except Exception as e:
         print(f"Error inserting data: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return False
+    finally:
+        # Ensure connection is closed even if an error occurs
+        if conn:
+            conn.close()
 
 def get_recent_data(seconds=60):
-    conn = sqlite3.connect('database/battery_data.db')
-    cursor = conn.cursor()
-    
-    # Calculate the timestamp for seconds ago
-    time_threshold = (datetime.now() - timedelta(seconds=seconds)).isoformat()
-    
-    cursor.execute('''
-    SELECT timestamp, cell1_voltage, cell2_voltage, cell3_voltage,
-           temperature, state_of_charge
-    FROM BatteryData 
-    WHERE timestamp >= ?
-    ORDER BY timestamp
-    ''', (time_threshold,))
-    
-    data = cursor.fetchall()
-    conn.close()
-    return data
+    conn = None
+    try:
+        conn = sqlite3.connect('database/battery_data.db', timeout=10)
+        cursor = conn.cursor()
+        
+        # Calculate the timestamp for seconds ago
+        time_threshold = (datetime.now() - timedelta(seconds=seconds)).isoformat()
+        
+        cursor.execute('''
+        SELECT timestamp, cell1_voltage, cell2_voltage, cell3_voltage,
+               temperature, state_of_charge
+        FROM BatteryData 
+        WHERE timestamp >= ?
+        ORDER BY timestamp
+        ''', (time_threshold,))
+        
+        data = cursor.fetchall()
+        return data
+    except Exception as e:
+        print(f"Error getting recent data: {str(e)}")
+        return []
+    finally:
+        if conn:
+            conn.close()
 
 def clear_data():
-    conn = sqlite3.connect('database/battery_data.db')
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM BatteryData')
-    conn.commit()
-    conn.close()
+    conn = None
+    try:
+        conn = sqlite3.connect('database/battery_data.db', timeout=10)
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM BatteryData')
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error clearing data: {str(e)}")
+        return False
+    finally:
+        if conn:
+            conn.close()
 
 if __name__ == "__main__":
     create_database() 

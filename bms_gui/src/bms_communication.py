@@ -34,7 +34,6 @@ class BMSCommunication:
         # Initialize data storage
         self.cell_values = [0.0, 0.0, 0.0]
         self.temperature = 0.0
-        self.humidity = 0.0
         self.total_voltage = 0.0
         self.current = 0.0
         self.state_of_charge = 0.0
@@ -106,9 +105,8 @@ class BMSCommunication:
                     self.cell_values[1] = (cell_2.value * 3.3) * 3.127
                     self.cell_values[2] = (cell_3.value * 3.3) * 1.47
                     
-                    # Read temperature and humidity
+                    # Read temperature
                     self.temperature = dht_device.temperature
-                    self.humidity = dht_device.humidity
                     
                     # Calculate total voltage
                     self.total_voltage = sum(self.cell_values)
@@ -140,6 +138,10 @@ class BMSCommunication:
         # For simple sine wave variation
         time_counter = 0
         
+        # For tracking when to generate spikes
+        next_voltage_spike = random.randint(5, 15)
+        next_temp_spike = random.randint(5, 15)
+        
         while self.is_running:
             try:
                 time_counter += 1
@@ -147,22 +149,36 @@ class BMSCommunication:
                 # Add some sine wave variation plus small random noise
                 sine_factor = math.sin(time_counter / 10) * 0.5
                 
-                # Update cell values with variation
-                self.cell_values[0] = cell1_base + sine_factor + random.uniform(-0.1, 0.1)
-                self.cell_values[1] = cell2_base + sine_factor + random.uniform(-0.1, 0.1)
-                self.cell_values[2] = cell3_base + sine_factor + random.uniform(-0.1, 0.1)
+                # Determine if we should create voltage spike
+                if time_counter >= next_voltage_spike:
+                    # Generate a spike that exceeds threshold
+                    voltage_spike = random.uniform(1.0, 2.5)
+                    next_voltage_spike = time_counter + random.randint(20, 40)  # Next spike in 20-40 seconds
+                else:
+                    voltage_spike = 0
                 
-                # Update temperature with variation
-                self.temperature = temp_base + sine_factor + random.uniform(-0.5, 0.5)
+                # Determine if we should create temperature spike
+                if time_counter >= next_temp_spike:
+                    # Generate a spike that exceeds threshold
+                    temp_spike = random.uniform(5.0, 10.0)
+                    next_temp_spike = time_counter + random.randint(30, 60)  # Next spike in 30-60 seconds
+                else:
+                    temp_spike = 0
                 
-                # Update humidity
-                self.humidity = 50.0 + sine_factor * 5 + random.uniform(-2, 2)
+                # Update cell values with variation and potential spike
+                self.cell_values[0] = cell1_base + sine_factor + random.uniform(-0.1, 0.1) + voltage_spike
+                self.cell_values[1] = cell2_base + sine_factor + random.uniform(-0.1, 0.1) + (voltage_spike * 0.8)
+                self.cell_values[2] = cell3_base + sine_factor + random.uniform(-0.1, 0.1) + (voltage_spike * 0.6)
+                
+                # Update temperature with variation and potential spike
+                self.temperature = temp_base + sine_factor + random.uniform(-0.5, 0.5) + temp_spike
                 
                 # Update total voltage
                 self.total_voltage = sum(self.cell_values)
                 
-                # Update SOC
-                self.state_of_charge = soc_base + sine_factor * 3 + random.uniform(-1, 1)
+                # Update SOC (decrease during voltage spikes to simulate high load)
+                soc_adjustment = -5.0 if voltage_spike > 0 else 0
+                self.state_of_charge = max(0, min(100, soc_base + sine_factor * 3 + random.uniform(-1, 1) + soc_adjustment))
                 
                 time.sleep(1.0)
                 
@@ -180,8 +196,7 @@ class BMSCommunication:
                 'current': self.current,
                 'temperature': self.temperature,
                 'state_of_charge': self.state_of_charge,
-                'cell_voltages': self.cell_values.copy(),
-                'humidity': self.humidity
+                'cell_voltages': self.cell_values.copy()
             }
         except Exception as e:
             self.log_error(f"Error reading BMS data: {str(e)}", "ERROR")

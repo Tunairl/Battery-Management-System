@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
@@ -22,8 +22,8 @@ class BMSGUI:
             # Initialize variables first
             self.bms = None
             self.data_collection_active = False
-            self.temp_threshold = 40.0
-            self.cell_voltage_threshold = 20.0
+            self.temp_threshold = 30.0
+            self.cell_voltage_threshold = 14.0
             self.collection_thread = None
             
             # Create database directory and initialize database
@@ -89,14 +89,20 @@ class BMSGUI:
             ttk.Label(self.display_frame, text="Cell 1 (V):").grid(row=0, column=0, padx=5, pady=5)
             self.cell1_var = tk.StringVar(value="0.0")
             ttk.Label(self.display_frame, textvariable=self.cell1_var).grid(row=0, column=1, padx=5, pady=5)
+            self.cell1_warning = ttk.Label(self.display_frame, text="", foreground="red")
+            self.cell1_warning.grid(row=0, column=2, padx=5, pady=5)
             
             ttk.Label(self.display_frame, text="Cell 2 (V):").grid(row=1, column=0, padx=5, pady=5)
             self.cell2_var = tk.StringVar(value="0.0")
             ttk.Label(self.display_frame, textvariable=self.cell2_var).grid(row=1, column=1, padx=5, pady=5)
+            self.cell2_warning = ttk.Label(self.display_frame, text="", foreground="red")
+            self.cell2_warning.grid(row=1, column=2, padx=5, pady=5)
             
             ttk.Label(self.display_frame, text="Cell 3 (V):").grid(row=2, column=0, padx=5, pady=5)
             self.cell3_var = tk.StringVar(value="0.0")
             ttk.Label(self.display_frame, textvariable=self.cell3_var).grid(row=2, column=1, padx=5, pady=5)
+            self.cell3_warning = ttk.Label(self.display_frame, text="", foreground="red")
+            self.cell3_warning.grid(row=2, column=2, padx=5, pady=5)
             
             # Temperature display
             ttk.Label(self.display_frame, text="Temperature (°C):").grid(row=3, column=0, padx=5, pady=5)
@@ -206,13 +212,40 @@ class BMSGUI:
         except Exception as e:
             messagebox.showerror("Monitoring Error", f"Failed to toggle monitoring: {str(e)}")
 
-    def check_warnings(self, temperature):
+    def check_warnings(self, temperature, cell_voltages):
         try:
+            # Check for temperature warnings
             if temperature > self.temp_threshold:
                 self.temp_warning.config(text="⚠ High Temperature!")
                 messagebox.showerror("High Temperature Alert", f"High Temperature Detected: {temperature:.2f}°C exceeds threshold of {self.temp_threshold}°C!")
             else:
                 self.temp_warning.config(text="")
+                
+            # Check for cell voltage warnings
+            voltage_exceeded = False
+            if cell_voltages[0] > self.cell_voltage_threshold:
+                self.cell1_warning.config(text="⚠ High Voltage!")
+                voltage_exceeded = True
+            else:
+                self.cell1_warning.config(text="")
+                
+            if cell_voltages[1] > self.cell_voltage_threshold:
+                self.cell2_warning.config(text="⚠ High Voltage!")
+                voltage_exceeded = True
+            else:
+                self.cell2_warning.config(text="")
+                
+            if cell_voltages[2] > self.cell_voltage_threshold:
+                self.cell3_warning.config(text="⚠ High Voltage!")
+                voltage_exceeded = True
+            else:
+                self.cell3_warning.config(text="")
+                
+            # Show a message box for voltage warning only if we haven't shown one recently
+            if voltage_exceeded:
+                over_cells = [f"Cell {i+1}: {v:.2f}V" for i, v in enumerate(cell_voltages) if v > self.cell_voltage_threshold]
+                messagebox.showerror("High Voltage Alert", f"High Voltage Detected!\n{', '.join(over_cells)} exceeds threshold of {self.cell_voltage_threshold}V!")
+                
         except Exception as e:
             print(f"Warning check error: {str(e)}")
 
@@ -243,7 +276,7 @@ class BMSGUI:
                             data['state_of_charge']
                         )
                         
-                        self.check_warnings(data['temperature'])
+                        self.check_warnings(data['temperature'], data['cell_voltages'])
                         
                         self.update_graphs()
             except Exception as e:
@@ -326,7 +359,21 @@ class BMSGUI:
 
     def export_data(self):
         try:
-            data = get_recent_data(0)  # Get all data
+            from tkinter import filedialog
+            
+            # Ask user if they want to export recent data or cancel
+            export_option = messagebox.askokcancel(
+                "Export Options", 
+                "Export recent data (last hour)?\n\nClick 'OK' to export or 'Cancel' to abort."
+            )
+            
+            if not export_option:  # User clicked Cancel
+                return
+                
+            # Export recent data only
+            data = get_recent_data(60)  # Get last hour of data
+            title = "Recent BMS Data (Last Hour)"
+            
             if not data:
                 messagebox.showinfo("Info", "No data to export")
                 return
@@ -334,9 +381,34 @@ class BMSGUI:
             df = pd.DataFrame(data, columns=['timestamp', 'cell1_voltage', 'cell2_voltage', 
                                            'cell3_voltage', 'temperature', 'state_of_charge'])
             
-            filename = f"bms_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            # Default filename with timestamp
+            default_filename = f"bms_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            
+            # Open file dialog to let user choose save location
+            filename = filedialog.asksaveasfilename(
+                title=f"Save {title}", 
+                initialfile=default_filename,
+                defaultextension=".csv",
+                filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")]
+            )
+            
+            if not filename:  # User cancelled file dialog
+                return
+                
+            # Export the data
             df.to_csv(filename, index=False)
             messagebox.showinfo("Success", f"Data exported to {filename}")
+            
+            # Record the export in the database
+            conn = sqlite3.connect('database/battery_data.db')
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO ExportLogs (timestamp, file_path, export_format) VALUES (?, ?, ?)", 
+                (datetime.now().isoformat(), filename, "CSV")
+            )
+            conn.commit()
+            conn.close()
+            
         except Exception as e:
             messagebox.showerror("Export Error", f"Failed to export data: {str(e)}")
 
@@ -351,6 +423,12 @@ class BMSGUI:
                 self.cell3_var.set("0.0")
                 self.temp_var.set("0.0")
                 self.soc_var.set("0.0")
+                
+                # Clear warning labels
+                self.cell1_warning.config(text="")
+                self.cell2_warning.config(text="")
+                self.cell3_warning.config(text="")
+                self.temp_warning.config(text="")
                 
                 # Clear graphs
                 for line in [self.cell1_line, self.cell2_line, self.cell3_line, 
