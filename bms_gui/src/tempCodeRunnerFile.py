@@ -1,1 +1,2 @@
-os.makedirs('database', exist_ok=True)
+Database path: {db_path}")
+        
